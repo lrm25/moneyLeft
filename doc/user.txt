@@ -1,0 +1,9 @@
+1.  User enters values into money.json
+2.  User runs program
+3.  Program prints total months left
+
+3e1.  File isn't there
+1.  Program prints error and exits
+
+3e2.  User has entered malformed data (letters, negative numbers, etc.)
+1.  Program prints error and exits

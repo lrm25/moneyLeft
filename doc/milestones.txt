@@ -1,0 +1,4 @@
+* overall money/money needed per month
+* brokerage amount vs. original amount, taxes and fees
+* 401K/estimated taxes and penalty
+* ability to change file name
