@@ -1,5 +1,6 @@
 * overall money/money needed per month
 * time you will be broke (d, m, y)
+* month by month (or year) description
 * brokerage amount vs. original amount, taxes and fees
 * 401K/estimated taxes and penalty
 * social security

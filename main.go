@@ -15,6 +15,8 @@ const FLAG_FILE_LOCATION = "fileLocation"
 
 const DEFAULT_FILE_LOCATION = "money.json"
 
+const ERROR_MONEYPERMONTH = "Money per month cannot be less than or equal to 0"
+
 type SavingsNoInterestAccount struct {
 	name   string
 	amount float64
@@ -71,7 +73,7 @@ func main() {
 	flag.Parse()
 
 	type TestStruct struct {
-		TotalMoney    float64
+		TotalMoney    float64 `json:"`
 		MoneyPerMonth float64
 	}
 
@@ -85,6 +87,11 @@ func main() {
 		fmt.Printf("%v", err)
 		return
 	}
+	if testStruct.MoneyPerMonth <= 0 {
+		fmt.Printf(ERROR_MONEYPERMONTH)
+		return
+	}
+
 	fmt.Printf("%.2f\n", testStruct.TotalMoney/testStruct.MoneyPerMonth)
 
 	/*var inflationRate float64
