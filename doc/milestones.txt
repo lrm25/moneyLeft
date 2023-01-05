@@ -1,4 +1,6 @@
 * overall money/money needed per month
+* time you will be broke (d, m, y)
 * brokerage amount vs. original amount, taxes and fees
 * 401K/estimated taxes and penalty
+* social security
 * ability to change file name

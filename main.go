@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 
@@ -9,6 +10,10 @@ import (
 )
 
 const FOUROHONEK_PENALTY_AGE = 59.5
+
+const FLAG_FILE_LOCATION = "fileLocation"
+
+const DEFAULT_FILE_LOCATION = "money.json"
 
 type SavingsNoInterestAccount struct {
 	name   string
@@ -62,12 +67,15 @@ type Milestone struct {
 
 func main() {
 
+	jsonLocation := flag.String(FLAG_FILE_LOCATION, DEFAULT_FILE_LOCATION, "JSON file containing financial data")
+	flag.Parse()
+
 	type TestStruct struct {
 		TotalMoney    float64
 		MoneyPerMonth float64
 	}
 
-	jsonFile, err := ioutil.ReadFile("money.json")
+	jsonFile, err := ioutil.ReadFile(*jsonLocation)
 	if err != nil {
 		fmt.Printf("%v", err)
 		return
