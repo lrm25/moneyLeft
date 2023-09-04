@@ -1,0 +1,58 @@
+person:
+  years: 30
+  months: 0
+  lifeExpectancy: 80
+  neededPerMonth: 5000.00
+stockReturn: 10.0
+bondReturn: 6.1
+inflationRate: 3.28
+creditCards:
+  - name: One Bank
+    amount: 1000.00
+  - name: Another Bank
+    amount: 2000.00
+interestAccounts:
+  - name: CD Bank
+    amount: 10000.00
+    rate: 2.00
+noInterestAccounts:
+  - name: Major Bank
+    amount: 10000.00
+  - name: Small Bank
+    amount: 2000.00
+brokerage:
+  - name: Stock Trading Company
+    amount: 25000.00
+    saleFee: 10.00
+ira:
+  - name: Retirement Bank
+    amount: 100000.00
+    percentStock: 90
+socialSecurity:
+  early: 1000
+  normal: 2000
+  late: 3000
+  selection: normal
+taxBrackets:
+  federal:
+    standardDeduction: 13850
+    brackets:
+    - minimum: 0
+      maximum: 11000
+      rate: 10
+    - minimum: 11000
+      maximum: 44725
+      rate: 12
+    - minimum: 44725
+      maximum: 95375
+      rate: 22
+  state:
+    - minimum: 0
+      rate: 4.4
+  capitalGains:
+    - minimum: 0
+      maximum: 44625
+      rate: 0
+    - minimum: 44625
+      maximum: 492300
+      rate: 15
