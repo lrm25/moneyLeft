@@ -1,11 +1,13 @@
 package models
 
-type AccountNoInterest struct {
+type BankAccountNoInterest struct {
 	*CashAccount
 }
 
-func NewAccountNoInterest(name string, amount float64) *AccountNoInterest {
-	return &AccountNoInterest{
+type AccountsNoInterest []*BankAccountNoInterest
+
+func NewAccountNoInterest(name string, amount float64) *BankAccountNoInterest {
+	return &BankAccountNoInterest{
 		CashAccount: NewCashAccount(name, TypeSavingsNoInterest, amount),
 	}
 }

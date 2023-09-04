@@ -1,6 +1,10 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/lrm25/moneyLeft/logger"
+)
 
 type Person struct {
 	years               int
@@ -17,9 +21,9 @@ type Person struct {
 	creditCards         []*CreditCardAccountImpl
 	accounts            []PositiveAccount
 	interestAccounts    []PassiveIncreaseAccount
-	nonCapBrackets      *TaxBrackets
+	nonCapBrackets      *FedTaxBrackets
 	capBrackets         *CapTaxBrackets
-	stateBrackets       *TaxBrackets
+	stateBrackets       *StateTaxBrackets
 	income              float64
 }
 
@@ -42,7 +46,7 @@ func (p *Person) WithAccounts(creditCards []*CreditCardAccountImpl, accounts Pos
 	return p
 }
 
-func (p *Person) WithTaxBrackets(nonCapBrackets *TaxBrackets, capBrackets *CapTaxBrackets, stateBrackets *TaxBrackets) {
+func (p *Person) WithTaxBrackets(nonCapBrackets *FedTaxBrackets, capBrackets *CapTaxBrackets, stateBrackets *StateTaxBrackets) {
 	p.nonCapBrackets = nonCapBrackets
 	p.capBrackets = capBrackets
 	p.stateBrackets = stateBrackets
@@ -56,10 +60,19 @@ func (p *Person) LifeExpectancy() int {
 	return p.lifeExpectancy
 }
 
-func (p *Person) AgeInYears() int {
+func (p *Person) AgeYears() int {
 	return p.years
 }
 
+func (p *Person) AgeMonths() int {
+	return p.months
+}
+
+func (p *Person) NeededPerMonth() float64 {
+	return p.neededPerMonth
+}
+
+// NOTE:  currently assuming taxes are being withheld
 func (p *Person) SetIncome(income float64) {
 	p.income = income
 }
@@ -100,9 +113,9 @@ func (p *Person) PayCreditCards() {
 func (p *Person) pay(remaining float64) bool {
 	for _, account := range p.accounts {
 		if !account.Closed() {
-			fmt.Printf("Paying from account %s\n", account.Name())
+			logger.Get().Debug(fmt.Sprintf("Paying from account %s", account.Name()))
 			remaining = account.Deduct(remaining)
-			fmt.Printf("non interest remaining: %.2f\n", remaining)
+			logger.Get().Debug(fmt.Sprintf("non interest remaining: %.2f", remaining))
 			if 0 < remaining {
 				return true
 			} else {
@@ -113,10 +126,10 @@ func (p *Person) pay(remaining float64) bool {
 
 	for _, account := range p.interestAccounts {
 		if !account.Closed() {
-			fmt.Printf("Paying from account %s\n", account.Name())
-			fmt.Printf("remaining: %.2f\n", remaining)
+			logger.Get().Debug(fmt.Sprintf("Paying from account %s", account.Name()))
+			logger.Get().Debug(fmt.Sprintf("remaining: %.2f", remaining))
 			remaining = account.Deduct(remaining)
-			fmt.Printf("after deduction: %.2f\n", remaining)
+			logger.Get().Debug(fmt.Sprintf("after deduction: %.2f", remaining))
 			if 0 < remaining {
 				return true
 			} else {
@@ -135,11 +148,22 @@ func (p *Person) ChangeTaxYear() {
 }
 
 func (p *Person) PayTaxes() bool {
-	amount := p.nonCapBrackets.GetTaxAmount(p.taxableOtherLast) + p.capBrackets.GetTaxAmount(p.taxableOtherLast, p.taxableCapGainsLast) + p.stateBrackets.GetTaxAmount(p.taxableOtherLast+p.taxableCapGainsLast)
-	fmt.Printf("non cap amount: %.2f\n", p.nonCapBrackets.GetTaxAmount(p.taxableOtherLast))
-	fmt.Printf("cap amount: %.2f\n", p.capBrackets.GetTaxAmount(p.taxableOtherLast, p.taxableCapGainsLast))
-	fmt.Printf("state amount: %.2f\n", p.stateBrackets.GetTaxAmount(p.taxableOtherLast+p.taxableCapGainsLast))
-	fmt.Printf("amount: %.2f\n", amount)
+
+	amount := 0.00
+	if p.nonCapBrackets != nil {
+		amount += p.nonCapBrackets.GetTaxAmount(p.taxableOtherLast)
+		logger.Get().Debug(fmt.Sprintf("non cap amount: %.2f", p.nonCapBrackets.GetTaxAmount(p.taxableOtherLast)))
+	}
+	if p.capBrackets != nil {
+		amount += p.capBrackets.GetTaxAmount(p.taxableOtherLast, p.taxableCapGainsLast)
+		logger.Get().Debug(fmt.Sprintf("cap amount: %.2f", p.capBrackets.GetTaxAmount(p.taxableOtherLast, p.taxableCapGainsLast)))
+	}
+	if p.stateBrackets != nil {
+		amount += p.stateBrackets.GetTaxAmount(p.taxableOtherLast+p.taxableCapGainsLast)
+		logger.Get().Debug(fmt.Sprintf("state amount: %.2f", p.stateBrackets.GetTaxAmount(p.taxableOtherLast+p.taxableCapGainsLast)))
+	}
+
+	logger.Get().Debug(fmt.Sprintf("amount: %.2f", amount))
 	// reset afterwards
 	p.taxableCapGainsLast = 0
 	p.taxableOtherLast = 0
@@ -148,17 +172,18 @@ func (p *Person) PayTaxes() bool {
 
 func (p *Person) IncreaseAge(year, month int) {
 	p.months++
-	if p.months == 13 {
+	if p.months == 12 {
 		p.years++
-		p.months = 1
+		p.months = 0
 	}
 	p.neededPerMonth *= (1 + p.inflationRate/1200.00)
-	println(p.neededPerMonth)
+	logger.Get().Debug(fmt.Sprintf("%.2f", p.neededPerMonth))
 
 	neededPerMonth := p.neededPerMonth
 	if 0 < p.income {
 		neededPerMonth -= p.income
 		p.taxableOtherThis += p.income
+		p.income *= (1 + p.inflationRate/1200.00)
 	}
 
 	for _, account := range p.interestAccounts {
@@ -172,7 +197,7 @@ func (p *Person) IncreaseAge(year, month int) {
 	}
 	for idx, account := range p.accounts {
 		if account.Closed() && account.Removable() {
-			fmt.Printf("Removing account %s\n", account.Name())
+			logger.Get().Debug(fmt.Sprintf("Removing account %s", account.Name()))
 			if idx < len(p.accounts)-1 {
 				p.accounts = append(p.accounts[:idx], p.accounts[idx+1:]...)
 			} else {
@@ -183,7 +208,7 @@ func (p *Person) IncreaseAge(year, month int) {
 	}
 	for idx, account := range p.interestAccounts {
 		if account.Closed() && account.Removable() {
-			fmt.Printf("Removing account %s\n", account.Name())
+			logger.Get().Debug(fmt.Sprintf("Removing account %s", account.Name()))
 			if idx < len(p.interestAccounts)-1 {
 				p.interestAccounts = append(p.interestAccounts[:idx], p.interestAccounts[idx+1:]...)
 			} else {
@@ -199,21 +224,23 @@ func (p *Person) IncreaseAge(year, month int) {
 		}
 		p.nonCapBrackets.Inflate(p.inflationRate)
 		p.capBrackets.Inflate(p.inflationRate)
+		p.stateBrackets.Inflate(p.inflationRate)
 	}
-	p.PrintStatus(year, month)
+	logger.Get().Debug(p.String(year, month))
 }
 
-func (p *Person) PrintStatus(year, month int) {
-	fmt.Printf("STATUS - year %d month %d\n", year, month)
-	fmt.Printf("Age: %d years %d months\n", p.years, p.months)
-	fmt.Printf("Needed per month: %.2f\n", p.neededPerMonth)
+func (p *Person) String(year, month int) string {
+	s := fmt.Sprintf("STATUS - year %d month %d\n", year, month)
+	s += fmt.Sprintf("Age: %d years %d months\n", p.years, p.months)
+	s += fmt.Sprintf("Needed per month: %.2f", p.neededPerMonth)
 	for _, cc := range p.creditCards {
-		fmt.Printf("%s %.2f\n", cc.name, cc.amount)
+		s += fmt.Sprintf("\n%s %.2f", cc.name, cc.amount)
 	}
 	for _, account := range p.accounts {
-		fmt.Printf("%s\n", account.String())
+		s += fmt.Sprintf("\n%s", account.String())
 	}
 	for _, pa := range p.interestAccounts {
-		fmt.Printf("%s\n", pa.String())
+		s += fmt.Sprintf("\n%s", pa.String())
 	}
+	return s
 }

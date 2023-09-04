@@ -3,6 +3,7 @@ package models
 import (
 	"testing"
 
+	"github.com/lrm25/moneyLeft/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -54,39 +55,39 @@ func Test_PayCreditCardsNothing(t *testing.T) {
 }
 
 func Test_SocialSecurity(t *testing.T) {
+
 	p := NewPerson(61, 0, 70, 0.0, 0.0)
-	payouts := NewPayoutsSocialSecurity(1000.00, 2000.00, 3000.00)
-	ssAccount := NewAccountSocialSecurity(Early, payouts, 10.0, p)
+	ssAccount := NewAccountSocialSecurity(EARLY, 1000.00, 10.0, p)
 	accounts := PassiveIncreaseAccounts{}
 	accounts = append(accounts, ssAccount)
 	p.WithAccounts(nil, nil, accounts)
 	for idx := 0; idx < 12; idx++ {
 		p.IncreaseAge(2000, 1)
 	}
-	assert.InDelta(t, ssAccount.Amount(), 1100.00, 10.00)
+	println(p.AgeYears(), p.AgeMonths())
+	require.InDelta(t, ssAccount.Amount(), 1100.00, 10.00)
 	p.IncreaseAge(2001, 1)
-	assert.InDelta(t, ssAccount.Amount(), 2200.00, 20.00)
+	require.InDelta(t, ssAccount.Amount(), 2215.00, 20.00)
 	p.IncreaseAge(2001, 1)
-	assert.InDelta(t, ssAccount.Amount(), 3200.00, 20.00)
+	require.InDelta(t, ssAccount.Amount(), 3340.00, 20.00)
 
 	p = NewPerson(65, 0, 70, 0.0, 0.0)
-	ssAccount = NewAccountSocialSecurity(Normal, payouts, 10.0, p)
+	ssAccount = NewAccountSocialSecurity(NORMAL, 2000.00, 10.0, p)
 	accounts = PassiveIncreaseAccounts{}
 	accounts = append(accounts, ssAccount)
 	p.WithAccounts(nil, nil, accounts)
 	for idx := 0; idx < 24; idx++ {
 		p.IncreaseAge(2000, 1)
 	}
-	assert.InDelta(t, ssAccount.Amount(), 2420.00, 100.00)
+	require.InDelta(t, ssAccount.Amount(), 2420.00, 100.00)
 	p.IncreaseAge(2002, 1)
-	assert.InDelta(t, ssAccount.Amount(), 4900.00, 20.00)
+	require.InDelta(t, ssAccount.Amount(), 4900.00, 20.00)
 }
 
 func Test_IncreaseAge(t *testing.T) {
 	person := NewPerson(40, 0, 50, 1000.00, 1.0)
 	bankAccount := NewAccountNoInterest("test no interest", 1000.00)
 	investmentAccount := NewAccountWithInterest("test with interest", 1000.00, 10)
-	println("amount", investmentAccount.Amount())
 	person.WithAccounts(nil, PositiveAccounts{bankAccount}, PassiveIncreaseAccounts{investmentAccount})
 	person.IncreaseAge(2000, 1)
 	assert.False(t, person.broke)
@@ -97,14 +98,18 @@ func Test_IncreaseAge(t *testing.T) {
 }
 
 func Test_PayTaxes(t *testing.T) {
+	logger.Init(logger.LEVEL_DEBUG)
 	person := NewPerson(40, 0, 50, 1000.00, 1.0)
 	bankAccount := NewAccountNoInterest("test no interest", 1000.00)
 	investmentAccount := NewAccountWithInterest("test interest", 10000.00, 10)
-	person.taxableOtherThis = 5000
-	person.taxableCapGainsThis = 5000
-	person.nonCapBrackets = NewTaxBrackets(4000.00, []*TaxBracket{NewTaxBracket(0.0, 4000.00, 10.0)})
-	person.capBrackets = NewCapTaxBrackets([]*TaxBracket{NewTaxBracket(0.0, 20000.0, 20.0)})
+	person.taxableOtherLast = 5000
+	person.taxableCapGainsLast = 5000
+	// total tax of (5000 - 4000) * 0.1 = 100
+	nonCapBrackets := NewFedTaxBrackets(4000.00, []*TaxBracket{NewTaxBracket(0.0, 4000.00, 10.0)})
+	// total tax of 5000 * 0.2 = 1000
+	capBrackets := NewCapTaxBrackets([]*TaxBracket{NewTaxBracket(0.0, 20000.0, 20.0)}) 
 	person.WithAccounts(nil, PositiveAccounts{bankAccount}, PassiveIncreaseAccounts{investmentAccount})
+	person.WithTaxBrackets(nonCapBrackets, capBrackets, nil)
 	person.PayTaxes()
-	assert.InDelta(t, 9900.00, investmentAccount.Amount(), 1.00)
+	assert.InDelta(t, 9900.00, investmentAccount.Amount() + bankAccount.Amount(), 1.00)
 }

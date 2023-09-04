@@ -10,7 +10,7 @@ func Test_TaxBracketsStdDeduction(t *testing.T) {
 
 	standardDeduction := 10000.00
 	taxBracket := NewTaxBracketNoMax(0, 10.00)
-	taxBrackets := NewTaxBrackets(standardDeduction, []*TaxBracket{taxBracket})
+	taxBrackets := NewFedTaxBrackets(standardDeduction, []*TaxBracket{taxBracket})
 
 	yearlyIncome := 11000.00
 	require.InDelta(t, 100.00, taxBrackets.GetTaxAmount(yearlyIncome), 1.00, "Tax obligation should be close to 100.00")

@@ -1,6 +1,12 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/lrm25/moneyLeft/logger"
+)
+
+type CreditCards []*CreditCardAccountImpl
 
 // NOTE:  I pay my cards off every month, if not this would have to change
 type CreditCardAccountImpl BankAccount
@@ -12,6 +18,10 @@ func NewCreditCardAccount(name string, debt float64) *CreditCardAccountImpl {
 		accountType: TypeCreditCard,
 		removable:   true,
 	}
+}
+
+func (c *CreditCardAccountImpl) Name() string {
+	return c.name
 }
 
 func (c *CreditCardAccountImpl) Type() int {
@@ -40,6 +50,6 @@ func (c *CreditCardAccountImpl) Pay(account PositiveAccount) bool {
 		account.Close()
 		c.amount -= accountAmount
 	}
-	fmt.Printf("Credit card amount for %s: %.2f", c.name, c.amount)
+	logger.Get().Debug(fmt.Sprintf("Credit card amount for %s: %.2f", c.name, c.amount))
 	return c.closed
 }

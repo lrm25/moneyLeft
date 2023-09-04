@@ -1,11 +1,17 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/lrm25/moneyLeft/logger"
+)
 
 type AccountWithInterest struct {
 	*BankAccount
-	InterestRate float64
+	interestRate float64
 }
+
+type AccountsWithInterest []*AccountWithInterest
 
 func NewAccountWithInterest(name string, amount, interestRate float64) *AccountWithInterest {
 	return &AccountWithInterest{
@@ -15,11 +21,15 @@ func NewAccountWithInterest(name string, amount, interestRate float64) *AccountW
 			accountType: TypeSavingsWithInterest,
 			removable:   true,
 		},
-		InterestRate: interestRate,
+		interestRate: interestRate,
 	}
 }
 
+func (a *AccountWithInterest) Rate() float64 {
+	return a.interestRate
+}
+
 func (a *AccountWithInterest) Increase() {
-	fmt.Printf("increasing %s: %.2f\n", a.name, a.amount)
-	a.amount *= (1 + (a.InterestRate / 1200.0))
+	logger.Get().Debug(fmt.Sprintf("increasing %s: %.2f\n", a.name, a.amount))
+	a.amount *= (1 + (a.interestRate / 1200.0))
 }

@@ -2,11 +2,13 @@ package models
 
 type IRA struct {
 	*BankAccount
-	PercentStock      float64
-	StockInterestRate float64
-	BondInterestRate  float64
+	percentStock      float64
+	stockInterestRate float64
+	bondInterestRate  float64
 	person            *Person
 }
+
+type IRAs []*IRA
 
 func NewIRA(name string, amount, percentStock, stockInterestRate, bondInterestRate float64, person *Person) *IRA {
 	return &IRA{
@@ -16,18 +18,34 @@ func NewIRA(name string, amount, percentStock, stockInterestRate, bondInterestRa
 			accountType: TypeIRA,
 			removable:   true,
 		},
-		PercentStock:      percentStock,
-		StockInterestRate: stockInterestRate,
-		BondInterestRate:  bondInterestRate,
+		percentStock:      percentStock,
+		stockInterestRate: stockInterestRate,
+		bondInterestRate:  bondInterestRate,
 		person:            person,
 	}
 }
 
+func (i *IRA) PercentStock() float64 {
+	return i.percentStock
+}
+
+func (i *IRA) StockInterestRate() float64 {
+	return i.stockInterestRate
+}
+
+func (i *IRA) BondInterestRate() float64 {
+	return i.bondInterestRate
+}
+
+func (i *IRA) Person() *Person {
+	return i.person
+}
+
 func (i *IRA) Increase() {
-	totalStock := i.amount * (i.PercentStock / 100.0)
+	totalStock := i.amount * (i.percentStock / 100.0)
 	totalBond := i.amount - totalStock
-	totalStock *= (1 + (i.StockInterestRate / 1200.0))
-	totalBond *= (1 + (i.BondInterestRate / 1200.0))
+	totalStock *= (1 + (i.stockInterestRate / 1200.0))
+	totalBond *= (1 + (i.bondInterestRate / 1200.0))
 	i.amount = totalStock + totalBond
 }
 

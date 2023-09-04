@@ -1,6 +1,10 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/lrm25/moneyLeft/logger"
+)
 
 const (
 	TypeCreditCard = iota + 1
@@ -63,7 +67,7 @@ func (a *BankAccount) Close() {
 }
 
 func (a *BankAccount) Deduct(amount float64) float64 {
-	fmt.Printf("deducting: %.2f\n", amount)
+	logger.Get().Debug(fmt.Sprintf("deducting: %.2f\n", amount))
 	a.amount -= amount
 	if a.amount <= 0 {
 		a.closed = true

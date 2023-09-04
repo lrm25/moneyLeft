@@ -1,47 +1,27 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/lrm25/moneyLeft/logger"
+)
 
 type SocialSecuritySelection int
 
 const (
-	Early  SocialSecuritySelection = 62
-	Normal                         = 67
-	Late                           = 70
+	EARLY SocialSecuritySelection = 62
+	NORMAL                         = 67
+	LATE                           = 70
 )
-
-type PayoutsSocialSecurity struct {
-	early  float64
-	normal float64
-	late   float64
-}
 
 type AccountSocialSecurity struct {
 	*AccountWithInterest
 	selection SocialSecuritySelection
 	perMonth  float64
-	Person    *Person
+	person    *Person
 }
 
-func NewPayoutsSocialSecurity(early, normal, late float64) *PayoutsSocialSecurity {
-	return &PayoutsSocialSecurity{
-		early:  early,
-		normal: normal,
-		late:   late,
-	}
-}
-
-func NewAccountSocialSecurity(selection SocialSecuritySelection, payouts *PayoutsSocialSecurity, interestRate float64, person *Person) *AccountSocialSecurity {
-	var payout float64
-	if selection == Early {
-		payout = payouts.early
-	} else if selection == Normal {
-		payout = payouts.normal
-	} else if selection == Late {
-		payout = payouts.late
-	} else {
-		panic(fmt.Sprintf("Invalid payout code: %v", payouts))
-	}
+func NewAccountSocialSecurity(selection SocialSecuritySelection, payout float64, interestRate float64, person *Person) *AccountSocialSecurity {
 	return &AccountSocialSecurity{
 		selection: selection,
 		perMonth:  payout,
@@ -52,20 +32,23 @@ func NewAccountSocialSecurity(selection SocialSecuritySelection, payouts *Payout
 				accountType: TypeSocialSecurity,
 				removable:   false,
 			},
-			InterestRate: interestRate,
+			interestRate: interestRate,
 		},
-		Person: person,
+		person: person,
 	}
 }
 
-func (s *AccountSocialSecurity) WithPerson(person *Person) *AccountSocialSecurity {
-	s.Person = person
-	return s
+func (s *AccountSocialSecurity) Person() *Person {
+	return s.person
+}
+
+func (s *AccountSocialSecurity) Selection() int {
+	return int(s.selection)
 }
 
 func (s *AccountSocialSecurity) Closed() bool {
-	println("SS", s.Person.years, s.selection)
-	if s.Person.years < int(s.selection) {
+	logger.Get().Debug(fmt.Sprintf("SS:  years %d, selection %d", s.person.years, s.selection))
+	if s.person.years < int(s.selection) {
 		s.closed = true
 		return true
 	}
@@ -74,25 +57,19 @@ func (s *AccountSocialSecurity) Closed() bool {
 }
 
 func (a *AccountSocialSecurity) Increase() {
-	a.perMonth *= (1 + (a.InterestRate / 1200.00))
-	if !a.Closed() {
+	a.perMonth *= (1 + (a.interestRate / 1200.00))
+	// don't increase on first month available
+	if !a.Closed() && (int(a.selection) < a.person.years || 0 < a.person.months) {
 		a.amount += a.perMonth
-		fmt.Printf("increasing social security to %.2f\n", a.amount)
+		logger.Get().Debug(fmt.Sprintf("increasing social security to %.2f\n", a.amount))
+		return
 	}
+	a.amount = a.perMonth
 }
 
 func (a *AccountSocialSecurity) Amount() float64 {
-	if a.Person.years < int(a.selection) {
+	if a.person.years < int(a.selection) {
 		return 0
-	}
-	return a.amount
-}
-
-func (a *AccountSocialSecurity) Deduct(amount float64) float64 {
-	fmt.Printf("deducting: %.2f\n", amount)
-	a.amount -= amount
-	if a.amount <= 0 {
-		a.closed = true
 	}
 	return a.amount
 }
