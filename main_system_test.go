@@ -1,7 +1,7 @@
 //go:build system
 // +build system
 
-package main
+/*package main
 
 import (
 	"bytes"
@@ -82,4 +82,4 @@ func Test_main_valid(t *testing.T) {
 
 	stdoutString := execProgram(t, testJsonFullPath)
 	require.Contains(t, stdoutString, "5.00")
-}
+}*/

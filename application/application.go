@@ -37,7 +37,7 @@ func Run(c *config.YamlConfig) {
 	if person.Broke() {
 		logger.Get().Info("Broke from credit cards")
 	}
-	person.SetIncome(1350.00)
+	person.SetIncome(0.00)
 	for {
 		month++
 		if month == 13 {
