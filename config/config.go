@@ -70,8 +70,8 @@ type FederalBrackets struct {
 
 type BracketCollection struct {
 	FederalBrackets      FederalBrackets `yaml:"federal"`
-	StateBrackets        []TaxBracket     `yaml:"state"`
-	CapitalGainsBrackets []TaxBracket     `yaml:"capitalGains"`
+	StateBrackets        []TaxBracket    `yaml:"state"`
+	CapitalGainsBrackets []TaxBracket    `yaml:"capitalGains"`
 }
 
 type YamlConfig struct {
@@ -85,7 +85,8 @@ type YamlConfig struct {
 	YamlBrokerageAccounts  []BrokerageAccount  `yaml:"brokerage"`
 	YamlIRAs               []IRA               `yaml:"ira"`
 	YamlSocialSecurity     SocialSecurity     `yaml:"socialSecurity"`
-	YamlBracketCollection  	   BracketCollection  `yaml:"taxBrackets"`
+	YamlBracketCollection  BracketCollection  `yaml:"taxBrackets"`
+	LogLevel 			   *string 			  `yaml:"logLevel"`
 	person 				   *models.Person
 	creditCards 		   models.CreditCards
 	interestAccounts 	   models.AccountsWithInterest
@@ -93,7 +94,7 @@ type YamlConfig struct {
 	brokerageAccounts 	   models.AccountsStockBrokerage
 	iras 				   models.IRAs
 	socialSecurity 		   *models.AccountSocialSecurity
-	bracketCollection *models.TaxBracketCollection
+	bracketCollection 	   *models.TaxBracketCollection
 }
 
 func Load(file string) *YamlConfig {

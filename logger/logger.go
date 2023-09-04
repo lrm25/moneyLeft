@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -31,7 +32,25 @@ func getLevelString(level int) string {
 	case LEVEL_TRACE:
 		return "TRACE"
 	}
-	panic(fmt.Sprintf("Invald log level %d", level))
+	panic(fmt.Sprintf("Invalid log level %d", level))
+}
+
+func getLevel(level string) int {
+	switch strings.ToUpper(level) {
+	case "CRIT":
+		return LEVEL_CRIT
+	case "ERROR":
+		return LEVEL_ERROR
+	case "WARN":
+		return LEVEL_WARN
+	case "INFO":
+		return LEVEL_INFO
+	case "DEBUG":
+		return LEVEL_DEBUG
+	case "TRACE":
+		return LEVEL_TRACE
+	}
+	panic(fmt.Sprintf("Invalid log level string %s", level))
 }
 
 var logger *Logger = nil
@@ -51,6 +70,10 @@ func Init(level int) *Logger {
 
 func Get() *Logger {
 	return logger
+}
+
+func (l *Logger) SetLevel(level string) {
+	l.level = getLevel(level)
 }
 
 func (l *Logger) Log(level int, message string) {

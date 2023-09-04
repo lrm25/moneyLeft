@@ -56,3 +56,4 @@ taxBrackets:
     - minimum: 44625
       maximum: 492300
       rate: 15
+logLevel: DEBUG
