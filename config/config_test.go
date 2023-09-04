@@ -120,7 +120,7 @@ taxBrackets:
 	socialSecurity := c.SocialSecurity()
 	// not 67 yet
 	require.InDelta(t, 0.0, socialSecurity.Amount(), 0.01)
-	require.Equal(t, models.NORMAL, socialSecurity.Selection())
+	require.Equal(t, int(models.NORMAL), socialSecurity.Selection())
 	require.Equal(t, 50, socialSecurity.Person().AgeYears())
 
 	taxBrackets := c.TaxBracketCollection()

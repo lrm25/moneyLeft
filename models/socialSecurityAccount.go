@@ -9,9 +9,9 @@ import (
 type SocialSecuritySelection int
 
 const (
-	EARLY SocialSecuritySelection = 62
-	NORMAL                         = 67
-	LATE                           = 70
+	EARLY SocialSecuritySelection  = 62
+	NORMAL SocialSecuritySelection = 67
+	LATE SocialSecuritySelection   = 70
 )
 
 type AccountSocialSecurity struct {

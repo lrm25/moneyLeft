@@ -2,6 +2,7 @@ package application
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/lrm25/moneyLeft/config"
 	"github.com/lrm25/moneyLeft/logger"
@@ -31,13 +32,17 @@ func Run(c *config.YamlConfig) {
 	pias = append(pias, c.SocialSecurity())
 
 	person.WithAccounts(c.CreditCards(), pas, pias)
-	year := 2023
-	month := 9
+	year := time.Now().Year()
+	month := int(time.Now().Month())
+
+	if c.MonthlyIncome != nil {
+		person.SetIncome(*c.MonthlyIncome)
+	}
+
 	person.PayCreditCards()
 	if person.Broke() {
 		logger.Get().Info("Broke from credit cards")
 	}
-	person.SetIncome(0.00)
 	for {
 		month++
 		if month == 13 {

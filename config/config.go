@@ -87,6 +87,7 @@ type YamlConfig struct {
 	YamlSocialSecurity     SocialSecurity     `yaml:"socialSecurity"`
 	YamlBracketCollection  BracketCollection  `yaml:"taxBrackets"`
 	LogLevel 			   *string 			  `yaml:"logLevel"`
+	MonthlyIncome 		   *float64 	      `yaml:"monthlyIncome"`
 	person 				   *models.Person
 	creditCards 		   models.CreditCards
 	interestAccounts 	   models.AccountsWithInterest

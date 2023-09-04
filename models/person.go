@@ -180,6 +180,7 @@ func (p *Person) IncreaseAge(year, month int) {
 	logger.Get().Debug(fmt.Sprintf("%.2f", p.neededPerMonth))
 
 	neededPerMonth := p.neededPerMonth
+	// for now, keep this simple and don't worry about handling first year YTD taxes
 	if 0 < p.income {
 		neededPerMonth -= p.income
 		p.taxableOtherThis += p.income
@@ -195,27 +196,29 @@ func (p *Person) IncreaseAge(year, month int) {
 		p.broke = true
 		return
 	}
-	for idx, account := range p.accounts {
-		if account.Closed() && account.Removable() {
-			logger.Get().Debug(fmt.Sprintf("Removing account %s", account.Name()))
+	for idx:= 0; idx < len(p.accounts); {
+		if p.accounts[idx].Closed() && p.accounts[idx].Removable() {
+			logger.Get().Debug(fmt.Sprintf("Removing account %s", p.accounts[idx].Name()))
 			if idx < len(p.accounts)-1 {
 				p.accounts = append(p.accounts[:idx], p.accounts[idx+1:]...)
 			} else {
 				p.accounts = p.accounts[:idx]
 			}
-			idx--
+			continue
 		}
+		idx++
 	}
-	for idx, account := range p.interestAccounts {
-		if account.Closed() && account.Removable() {
-			logger.Get().Debug(fmt.Sprintf("Removing account %s", account.Name()))
+	for idx := 0; idx < len(p.accounts); {
+		if p.accounts[idx].Closed() && p.accounts[idx].Removable() {
+			logger.Get().Debug(fmt.Sprintf("Removing account %s", p.accounts[idx].Name()))
 			if idx < len(p.interestAccounts)-1 {
 				p.interestAccounts = append(p.interestAccounts[:idx], p.interestAccounts[idx+1:]...)
 			} else {
 				p.interestAccounts = p.interestAccounts[:idx]
 			}
-			idx--
+			continue
 		}
+		idx++
 	}
 	if month == 4 {
 		if !p.PayTaxes() {
