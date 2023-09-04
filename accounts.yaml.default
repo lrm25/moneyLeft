@@ -57,3 +57,4 @@ taxBrackets:
       maximum: 492300
       rate: 15
 logLevel: DEBUG
+monthlyIncome: 1000
