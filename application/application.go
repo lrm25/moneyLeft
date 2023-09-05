@@ -9,6 +9,7 @@ import (
 	"github.com/lrm25/moneyLeft/models"
 )
 
+// Run the application, telling the user how long they can last before going broke with current accounts and monthly expenses
 func Run(c *config.YamlConfig) {
 
 	person := c.Person()

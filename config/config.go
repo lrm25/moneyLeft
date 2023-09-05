@@ -2,19 +2,21 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/lrm25/moneyLeft/logger"
 	"github.com/lrm25/moneyLeft/models"
 	"gopkg.in/yaml.v2"
 )
 
+// Constants representing social security payout declaration in yaml file
 const (
-	SS_PAYOUT_EARLY = "early"
-	SS_PAYOUT_NORMAL = "normal"
-	SS_PAYOUT_LATE = "late"
+	SSPayoutEarly = "early"
+	SSPayoutNormal = "normal"
+	SSPayoutLate = "late"
 )
 
+// YamlPerson - person in yaml file
 type YamlPerson struct {
 	Years          int `yaml:"years"`
 	Months         int `yaml:"months"`
@@ -22,34 +24,40 @@ type YamlPerson struct {
 	NeededPerMonth float64 `yaml:"neededPerMonth"`
 }
 
+// CreditCard - credit card in yaml file
 type CreditCard struct {
 	Name   string  `yaml:"name"`
 	Amount float64 `yaml:"amount"`
 }
 
+// InterestAccount - passive increase account in yaml file
 type InterestAccount struct {
 	Name   string  `yaml:"name"`
 	Amount float64 `yaml:"amount"`
 	Rate   float64 `yaml:"rate"`
 }
 
+// NoInterestAccount - no passive increase account in yaml file
 type NoInterestAccount struct {
 	Name   string  `yaml:"name"`
 	Amount float64 `yaml:"amount"`
 }
 
+// BrokerageAccount - stock brokerage account in yaml file
 type BrokerageAccount struct {
 	Name    string  `yaml:"name"`
 	Amount  float64 `yaml:"amount"`
 	SaleFee float64 `yaml:"monthlySaleFee"`
 }
 
+// IRA in yaml file
 type IRA struct {
 	Name         string  `yaml:"name"`
 	Amount       float64 `yaml:"amount"`
 	PercentStock float64 `yaml:"percentStock"`
 }
 
+// SocialSecurity account in yaml file
 type SocialSecurity struct {
 	Early     float64 `yaml:"early"`
 	Normal    float64 `yaml:"normal"`
@@ -57,23 +65,27 @@ type SocialSecurity struct {
 	Selection string  `yaml:"selection"`
 }
 
+// TaxBracket in yaml file
 type TaxBracket struct {
 	Minimum float64  `yaml:"minimum"`
 	Maximum *float64 `yaml:"maximum"`
 	Rate    float64  `yaml:"rate"`
 }
 
+// FederalBrackets in yaml file
 type FederalBrackets struct {
 	StandardDeduction float64      `yaml:"standardDeduction"`
 	TaxBrackets       []TaxBracket `yaml:"brackets"`
 }
 
+// BracketCollection - yaml file struct containing all tax brackets
 type BracketCollection struct {
 	FederalBrackets      FederalBrackets `yaml:"federal"`
 	StateBrackets        []TaxBracket    `yaml:"state"`
 	CapitalGainsBrackets []TaxBracket    `yaml:"capitalGains"`
 }
 
+// YamlConfig - struct holding yaml file data, and data converted to model data for this application
 type YamlConfig struct {
 	YamlPerson         	   YamlPerson         `yaml:"person"`
 	StockReturn            float64            `yaml:"stockReturn"`
@@ -98,8 +110,9 @@ type YamlConfig struct {
 	bracketCollection 	   *models.TaxBracketCollection
 }
 
+// Load loads the config file into the yaml structure
 func Load(file string) *YamlConfig {
-	configData, err := ioutil.ReadFile(file)
+	configData, err := os.ReadFile(file)
 	if err != nil {
 		logger.Get().Crit(fmt.Sprintf("Failed to read config file: %v", err))
 	}
@@ -113,6 +126,7 @@ func Load(file string) *YamlConfig {
 	return &config
 }
 
+// Person retrieves the person's data from the yaml file
 func (y *YamlConfig) Person() *models.Person {
 	if y.person == nil {
 		y.person = models.NewPerson(y.YamlPerson.Years, y.YamlPerson.Months, y.YamlPerson.LifeExpectancy, y.YamlPerson.NeededPerMonth, y.InflationRate)
@@ -120,6 +134,7 @@ func (y *YamlConfig) Person() *models.Person {
 	return y.person
 }
 
+// CreditCards retrieves credit card data from the yaml file
 func (y *YamlConfig) CreditCards() models.CreditCards {
 	if y.creditCards == nil {
 		y.creditCards = models.CreditCards{}
@@ -131,6 +146,7 @@ func (y *YamlConfig) CreditCards() models.CreditCards {
 	return y.creditCards
 }
 
+// InterestAccounts retrives passively-increasing cash account data from the yaml file
 func (y *YamlConfig) InterestAccounts() models.AccountsWithInterest {
 	if y.interestAccounts == nil {
 		y.interestAccounts = models.AccountsWithInterest{}
@@ -142,6 +158,7 @@ func (y *YamlConfig) InterestAccounts() models.AccountsWithInterest {
 	return y.interestAccounts
 }
 
+// NoInterestAccounts retreives non-passively-increasing cash account data from the yaml file
 func (y *YamlConfig) NoInterestAccounts() models.AccountsNoInterest {
 	if y.noInterestAccounts == nil {
 		y.noInterestAccounts = models.AccountsNoInterest{}
@@ -153,6 +170,7 @@ func (y *YamlConfig) NoInterestAccounts() models.AccountsNoInterest {
 	return y.noInterestAccounts
 }
 
+// BrokerageAccounts retrieves brokerage account data from the yaml file
 func (y *YamlConfig) BrokerageAccounts() models.AccountsStockBrokerage {
 	if y.brokerageAccounts == nil {
 		y.brokerageAccounts = models.AccountsStockBrokerage{}
@@ -164,6 +182,7 @@ func (y *YamlConfig) BrokerageAccounts() models.AccountsStockBrokerage {
 	return y.brokerageAccounts
 }
 
+// IRAs retrieves IRA account data from the yaml file
 func (y *YamlConfig) IRAs() models.IRAs {
 	if y.iras == nil {
 		y.iras = models.IRAs{}
@@ -175,16 +194,16 @@ func (y *YamlConfig) IRAs() models.IRAs {
 	return y.iras
 }
 
+// SocialSecurity retrieves social security data from the yaml file
 func (y *YamlConfig) SocialSecurity() *models.AccountSocialSecurity {
-
 	if y.socialSecurity == nil {
 		switch y.YamlSocialSecurity.Selection {
-		case SS_PAYOUT_EARLY:
-			y.socialSecurity = models.NewAccountSocialSecurity(models.EARLY, y.YamlSocialSecurity.Early, y.InflationRate, y.Person())
-		case SS_PAYOUT_NORMAL:
-			y.socialSecurity = models.NewAccountSocialSecurity(models.NORMAL, y.YamlSocialSecurity.Normal, y.InflationRate, y.Person())
-		case SS_PAYOUT_LATE:
-			y.socialSecurity = models.NewAccountSocialSecurity(models.LATE, y.YamlSocialSecurity.Late, y.InflationRate, y.Person())
+		case SSPayoutEarly:
+			y.socialSecurity = models.NewAccountSocialSecurity(models.Early, y.YamlSocialSecurity.Early, y.InflationRate, y.Person())
+		case SSPayoutNormal:
+			y.socialSecurity = models.NewAccountSocialSecurity(models.Normal, y.YamlSocialSecurity.Normal, y.InflationRate, y.Person())
+		case SSPayoutLate:
+			y.socialSecurity = models.NewAccountSocialSecurity(models.Late, y.YamlSocialSecurity.Late, y.InflationRate, y.Person())
 		default:
 			panic(fmt.Sprintf("Invalid social security payout time: %s", y.YamlSocialSecurity.Selection))
 		}
@@ -192,6 +211,7 @@ func (y *YamlConfig) SocialSecurity() *models.AccountSocialSecurity {
 	return y.socialSecurity
 }
 
+// TaxBracketCollection retrieves all tax bracket data from the yaml file
 func (y *YamlConfig) TaxBracketCollection() *models.TaxBracketCollection {
 	if y.bracketCollection == nil {
 		ftb := []*models.TaxBracket{}

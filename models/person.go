@@ -6,6 +6,7 @@ import (
 	"github.com/lrm25/moneyLeft/logger"
 )
 
+// Person - struct representing person running program, and info
 type Person struct {
 	years               int
 	months              int
@@ -27,6 +28,7 @@ type Person struct {
 	income              float64
 }
 
+// NewPerson construtor (current age in years and months, life expectancy, money needed per month, expected yearly inflation rate)
 func NewPerson(years, months, lifeExpectancy int, neededPerMonth, inflationRate float64) *Person {
 	return &Person{
 		years:          years,
@@ -39,6 +41,7 @@ func NewPerson(years, months, lifeExpectancy int, neededPerMonth, inflationRate 
 	}
 }
 
+// WithAccounts sets the person's accounts (credit cards, non-passively-increasing accounts, passively-increasing accounts)
 func (p *Person) WithAccounts(creditCards []*CreditCardAccountImpl, accounts PositiveAccounts, interestAccounts PassiveIncreaseAccounts) *Person {
 	p.creditCards = creditCards
 	p.accounts = accounts
@@ -46,37 +49,46 @@ func (p *Person) WithAccounts(creditCards []*CreditCardAccountImpl, accounts Pos
 	return p
 }
 
+// WithTaxBrackets sets the person's expected tax brackets
 func (p *Person) WithTaxBrackets(nonCapBrackets *FedTaxBrackets, capBrackets *CapTaxBrackets, stateBrackets *StateTaxBrackets) {
 	p.nonCapBrackets = nonCapBrackets
 	p.capBrackets = capBrackets
 	p.stateBrackets = stateBrackets
 }
 
+// Broke returns whether or not the user is broke.  If so, the program should terminate.
 func (p *Person) Broke() bool {
 	return p.broke
 }
 
+// LifeExpectancy returns the user's life expectancy.  If the user reaches their life expectancy before going broke, this
+// will be reported by the program.
 func (p *Person) LifeExpectancy() int {
 	return p.lifeExpectancy
 }
 
+// AgeYears returns the user's age in years as this program runs
 func (p *Person) AgeYears() int {
 	return p.years
 }
 
+// AgeMonths returns the age in months following the age in years
 func (p *Person) AgeMonths() int {
 	return p.months
 }
 
+// NeededPerMonth returns the user's monthly expense amount
 func (p *Person) NeededPerMonth() float64 {
 	return p.neededPerMonth
 }
 
-// NOTE:  currently assuming taxes are being withheld
+// SetIncome sets a user's monthly income
 func (p *Person) SetIncome(income float64) {
 	p.income = income
 }
 
+// PayCreditCards immediately pays off the user's credit cards.  To keep things simple now,
+// the user is immediately declared broke if they owe more than they have.
 func (p *Person) PayCreditCards() {
 	if len(p.creditCards) == 0 {
 		return
@@ -110,6 +122,7 @@ func (p *Person) PayCreditCards() {
 	p.creditCards = nil
 }
 
+// pay the user's monthly expenses
 func (p *Person) pay(remaining float64) bool {
 	for _, account := range p.accounts {
 		if !account.Closed() {
@@ -118,9 +131,8 @@ func (p *Person) pay(remaining float64) bool {
 			logger.Get().Debug(fmt.Sprintf("non interest remaining: %.2f", remaining))
 			if 0 < remaining {
 				return true
-			} else {
-				remaining *= -1
 			}
+			remaining *= -1
 		}
 	}
 
@@ -132,14 +144,15 @@ func (p *Person) pay(remaining float64) bool {
 			logger.Get().Debug(fmt.Sprintf("after deduction: %.2f", remaining))
 			if 0 < remaining {
 				return true
-			} else {
-				remaining *= -1
 			}
+			remaining *= -1
 		}
 	}
 	return false
 }
 
+// ChangeTaxYear switches the tax year and begins incrementing taxes on a new year, leaving
+// the previous year's taxable income to be available to be deducted on the tax month.
 func (p *Person) ChangeTaxYear() {
 	p.taxableCapGainsLast = p.taxableCapGainsThis
 	p.taxableOtherLast = p.taxableOtherThis
@@ -147,6 +160,7 @@ func (p *Person) ChangeTaxYear() {
 	p.taxableOtherThis = 0
 }
 
+// PayTaxes deducts the user's expected yearly taxes
 func (p *Person) PayTaxes() bool {
 
 	amount := 0.00
@@ -170,6 +184,11 @@ func (p *Person) PayTaxes() bool {
 	return p.pay(amount)
 }
 
+// IncreaseAge increases the person's age by one month and does corresponding calculations:  deducting
+// expected monthly amount, closing empty accounts with the exception of social security, paying taxes
+// once a year, and terminating if the user is broke.  The program also allows the user to add a monthly
+// income if they make less than what they need and want to see how much longer they can last if they 
+// continue to make that income.
 func (p *Person) IncreaseAge(year, month int) {
 	p.months++
 	if p.months == 12 {
@@ -232,6 +251,7 @@ func (p *Person) IncreaseAge(year, month int) {
 	logger.Get().Debug(p.String(year, month))
 }
 
+// String returns a string representation of the person for info, debugging
 func (p *Person) String(year, month int) string {
 	s := fmt.Sprintf("STATUS - year %d month %d\n", year, month)
 	s += fmt.Sprintf("Age: %d years %d months\n", p.years, p.months)

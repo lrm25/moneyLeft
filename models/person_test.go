@@ -57,7 +57,7 @@ func Test_PayCreditCardsNothing(t *testing.T) {
 func Test_SocialSecurity(t *testing.T) {
 
 	p := NewPerson(61, 0, 70, 0.0, 0.0)
-	ssAccount := NewAccountSocialSecurity(EARLY, 1000.00, 10.0, p)
+	ssAccount := NewAccountSocialSecurity(Early, 1000.00, 10.0, p)
 	accounts := PassiveIncreaseAccounts{}
 	accounts = append(accounts, ssAccount)
 	p.WithAccounts(nil, nil, accounts)
@@ -72,7 +72,7 @@ func Test_SocialSecurity(t *testing.T) {
 	require.InDelta(t, ssAccount.Amount(), 3340.00, 20.00)
 
 	p = NewPerson(65, 0, 70, 0.0, 0.0)
-	ssAccount = NewAccountSocialSecurity(NORMAL, 2000.00, 10.0, p)
+	ssAccount = NewAccountSocialSecurity(Normal, 2000.00, 10.0, p)
 	accounts = PassiveIncreaseAccounts{}
 	accounts = append(accounts, ssAccount)
 	p.WithAccounts(nil, nil, accounts)
@@ -98,7 +98,7 @@ func Test_IncreaseAge(t *testing.T) {
 }
 
 func Test_PayTaxes(t *testing.T) {
-	logger.Init(logger.LEVEL_DEBUG)
+	logger.Init(logger.LevelDebug)
 	person := NewPerson(40, 0, 50, 1000.00, 1.0)
 	bankAccount := NewAccountNoInterest("test no interest", 1000.00)
 	investmentAccount := NewAccountWithInterest("test interest", 10000.00, 10)

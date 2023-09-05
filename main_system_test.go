@@ -1,9 +1,9 @@
 //go:build system
 // +build system
 
-/*package main
+package main
 
-import (
+/*import (
 	"bytes"
 	"os"
 	"os/exec"

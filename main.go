@@ -8,7 +8,7 @@ import (
 
 func main() {
 
-	logger.Init(logger.LEVEL_INFO)
+	logger.Init(logger.LevelInfo)
 	c := config.Load("accounts.yaml")
 	if c.LogLevel != nil {
 		logger.Get().SetLevel(*c.LogLevel)
