@@ -1,0 +1,9 @@
+# enable revive linter
+linters:
+  enable:
+    - revive
+issues:
+  include:
+    - EXC0012
+    - EXC0013
+    - EXC0014
