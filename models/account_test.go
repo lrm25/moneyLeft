@@ -11,7 +11,7 @@ func Test_RemovableAccounts(t *testing.T) {
 	var accounts Accounts
 
 	nonSSAccount := NewBankAccount("test non ss account", TypeSavingsNoInterest, 0.00)
-	ssAccount := NewAccountSocialSecurity(EARLY, 0.00, 0.00, NewPerson(50, 0, 80, 1000.00, 0.0))
+	ssAccount := NewAccountSocialSecurity(Early, 0.00, 0.00, NewPerson(50, 0, 80, 1000.00, 0.0))
 	accounts = append(accounts, nonSSAccount, ssAccount)
 	for idx, account := range accounts {
 		if account.Removable() {

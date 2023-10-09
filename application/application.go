@@ -9,6 +9,28 @@ import (
 	"github.com/lrm25/moneyLeft/models"
 )
 
+func runAgeLoop(person *models.Person, year, month int) {
+	for {
+		month++
+		if month == 13 {
+			month = 1
+			year++
+			person.ChangeTaxYear()
+		}
+		logger.Get().Debug(fmt.Sprintf("year: %d, month: %d", year, month))
+		person.IncreaseAge(year, month)
+		if person.Broke() {
+			logger.Get().Info(fmt.Sprintf("Broke on year %d, month %d", year, month))
+			return
+		}
+		if person.LifeExpectancy() <= person.AgeYears() {
+			logger.Get().Info("You will die before you go broke")
+			return
+		}
+	}
+}
+
+// Run the application, telling the user how long they can last before going broke with current accounts and monthly expenses
 func Run(c *config.YamlConfig) {
 
 	person := c.Person()
@@ -43,22 +65,5 @@ func Run(c *config.YamlConfig) {
 	if person.Broke() {
 		logger.Get().Info("Broke from credit cards")
 	}
-	for {
-		month++
-		if month == 13 {
-			month = 1
-			year++
-			person.ChangeTaxYear()
-		}
-		logger.Get().Debug(fmt.Sprintf("year: %d, month: %d", year, month))
-		person.IncreaseAge(year, month)
-		if person.Broke() {
-			logger.Get().Info(fmt.Sprintf("Broke on year %d, month %d", year, month))
-			return
-		}
-		if person.LifeExpectancy() <= person.AgeYears() {
-			logger.Get().Info("You will die before you go broke")
-			return
-		}
-	}
+	runAgeLoop(person, year, month)
 }

@@ -3,7 +3,7 @@ name:  CI
 on: push
 
 jobs:
-  system-test:
+  test:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
@@ -16,5 +16,5 @@ jobs:
       - name: Build executable
         run: go build -o moneyLeft.exe ./main.go
 
-      - name: Run system tests
+      - name: Run tests
         run: go test -v ./...

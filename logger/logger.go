@@ -2,34 +2,36 @@ package logger
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"runtime"
 	"strings"
 	"time"
 )
 
+// Log levels
 const (
-	LEVEL_CRIT  = 1
-	LEVEL_ERROR = 2
-	LEVEL_WARN  = 3
-	LEVEL_INFO  = 4
-	LEVEL_DEBUG = 5
-	LEVEL_TRACE = 6
+	LevelCrit  = 1
+	LevelError = 2
+	LevelWarn  = 3
+	LevelInfo  = 4
+	LevelDebug = 5
+	LevelTrace = 6
 )
 
 func getLevelString(level int) string {
 	switch level {
-	case LEVEL_CRIT:
+	case LevelCrit:
 		return "CRIT"
-	case LEVEL_ERROR:
+	case LevelError:
 		return "ERROR"
-	case LEVEL_WARN:
+	case LevelWarn:
 		return "WARN"
-	case LEVEL_INFO:
+	case LevelInfo:
 		return "INFO"
-	case LEVEL_DEBUG:
+	case LevelDebug:
 		return "DEBUG"
-	case LEVEL_TRACE:
+	case LevelTrace:
 		return "TRACE"
 	}
 	panic(fmt.Sprintf("Invalid log level %d", level))
@@ -38,76 +40,99 @@ func getLevelString(level int) string {
 func getLevel(level string) int {
 	switch strings.ToUpper(level) {
 	case "CRIT":
-		return LEVEL_CRIT
+		return LevelCrit
 	case "ERROR":
-		return LEVEL_ERROR
+		return LevelError
 	case "WARN":
-		return LEVEL_WARN
+		return LevelWarn
 	case "INFO":
-		return LEVEL_INFO
+		return LevelInfo
 	case "DEBUG":
-		return LEVEL_DEBUG
+		return LevelDebug
 	case "TRACE":
-		return LEVEL_TRACE
+		return LevelTrace
 	}
 	panic(fmt.Sprintf("Invalid log level string %s", level))
 }
 
-var logger *Logger = nil
+var logger *Logger
 
+// Logger struct, with log level
 type Logger struct {
 	level int
+	stream io.Writer
 }
 
+// Init initializes logger with a certain log level
 func Init(level int) *Logger {
 	if logger == nil {
 		logger = &Logger{
 			level: level,
+			stream: os.Stdout,
 		}
 	}
 	return logger
 }
 
+func InitWithWriter(level int, stream io.Writer) *Logger {
+	if logger == nil {
+		logger = &Logger{
+			level: level,
+			stream: stream,
+		}
+	}
+	return logger
+}
+
+// Get returns the logger
 func Get() *Logger {
 	return logger
 }
 
+// SetLevel changes an already-initialized logger's level
 func (l *Logger) SetLevel(level string) {
 	l.level = getLevel(level)
 }
 
+// Log a message.  If the level integer is above the level the logger is set to, ignore the message.
 func (l *Logger) Log(level int, message string) {
 	if l == nil {
-		l = Init(LEVEL_INFO)
+		l = Init(LevelInfo)
 	}
 	if level <= l.level {
 		datetime := time.Now().Format("2006-01-02 15:04:05 -0700")
 		_, file, line, _ := runtime.Caller(2)
-		fmt.Printf("%s %s [%s:%d] %s\n", datetime, getLevelString(level), file, line, message)
+		fmt.Fprintf(l.stream, "%s %s [%s:%d] %s\n", datetime, getLevelString(level), file, line, message)
 	}
 }
 
+// Trace message
 func (l *Logger) Trace(message string) {
-	l.Log(LEVEL_TRACE, message)
+	l.Log(LevelTrace, message)
 }
 
+// Debug message
 func (l *Logger) Debug(message string) {
-	l.Log(LEVEL_DEBUG, message)
+	l.Log(LevelDebug, message)
 }
 
+// Info message
 func (l *Logger) Info(message string) {
-	l.Log(LEVEL_INFO, message)
+	l.Log(LevelInfo, message)
 }
 
+// Warn message
 func (l *Logger) Warn(message string) {
-	l.Log(LEVEL_WARN, message)
+	l.Log(LevelWarn, message)
 }
 
+// Error message
 func (l *Logger) Error(message string) {
-	l.Log(LEVEL_ERROR, message)
+	l.Log(LevelError, message)
 }
 
+// Crit message - log and terminate
 func (l *Logger) Crit(message string) {
-	l.Log(LEVEL_CRIT, message)
+	l.Log(LevelCrit, message)
 	os.Exit(1)
 }
