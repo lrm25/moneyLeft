@@ -2,6 +2,7 @@ package logger
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"runtime"
 	"strings"
@@ -59,6 +60,7 @@ var logger *Logger
 // Logger struct, with log level
 type Logger struct {
 	level int
+	stream io.Writer
 }
 
 // Init initializes logger with a certain log level
@@ -66,6 +68,17 @@ func Init(level int) *Logger {
 	if logger == nil {
 		logger = &Logger{
 			level: level,
+			stream: os.Stdout,
+		}
+	}
+	return logger
+}
+
+func InitWithWriter(level int, stream io.Writer) *Logger {
+	if logger == nil {
+		logger = &Logger{
+			level: level,
+			stream: stream,
 		}
 	}
 	return logger
@@ -89,7 +102,7 @@ func (l *Logger) Log(level int, message string) {
 	if level <= l.level {
 		datetime := time.Now().Format("2006-01-02 15:04:05 -0700")
 		_, file, line, _ := runtime.Caller(2)
-		fmt.Printf("%s %s [%s:%d] %s\n", datetime, getLevelString(level), file, line, message)
+		fmt.Fprintf(l.stream, "%s %s [%s:%d] %s\n", datetime, getLevelString(level), file, line, message)
 	}
 }
 
