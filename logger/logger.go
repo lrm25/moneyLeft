@@ -74,6 +74,7 @@ func Init(level int) *Logger {
 	return logger
 }
 
+// InitWithWriter initializes a logger with a specific writer
 func InitWithWriter(level int, stream io.Writer) *Logger {
 	if logger == nil {
 		logger = &Logger{

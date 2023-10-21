@@ -14,5 +14,5 @@ func Test_printCostToConvert(t *testing.T) {
 
 	logger.InitWithWriter(logger.LevelInfo, &buffer)
 	printCostToConvert(100.00, 50.00)
-	require.Contains(t, string(buffer.Bytes()), "Cost in months: 2.00, approx days: 60.00")
+	require.Contains(t, buffer.String(), "Cost in months: 2.00, approx days: 60.00")
 }
