@@ -2,3 +2,5 @@
 *.json
 *.yaml
 *.yml
+!.github/workflows/go.yml
+!.github/workflows/golangci-lint.yml
