@@ -99,5 +99,5 @@ func Run(c *config.YamlConfig, calculateMinNeeded bool) bool {
 	if person.Broke() {
 		logger.Get().Info("Broke from credit cards")
 	}
-	return runAgeLoop(person, year, month, calculateMinNeeded)
+	runAgeLoop(person, year, month, calculateMinNeeded)
 }
