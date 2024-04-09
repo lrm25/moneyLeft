@@ -10,8 +10,10 @@ import (
 )
 
 func runAgeLoop(person *models.Person, year, month int) {
+	totalMonths := 0
 	for {
 		month++
+		totalMonths++
 		if month == 13 {
 			month = 1
 			year++
@@ -20,7 +22,9 @@ func runAgeLoop(person *models.Person, year, month int) {
 		logger.Get().Debug(fmt.Sprintf("year: %d, month: %d", year, month))
 		person.IncreaseAge(year, month)
 		if person.Broke() {
-			logger.Get().Info(fmt.Sprintf("Broke on year %d, month %d (age %d years, %d months)", year, month, person.AgeYears(), person.AgeMonths()))
+			logger.Get().Info(fmt.Sprintf("Broke on year %d, month %d", year, month))
+			logger.Get().Info(fmt.Sprintf("Age:  %d years, %d months", person.AgeYears(), person.AgeMonths()))
+			logger.Get().Info(fmt.Sprintf("Total time:  %d years, %d months", totalMonths/12, totalMonths%12))
 			return
 		}
 		if person.LifeExpectancy() <= person.AgeYears() {
