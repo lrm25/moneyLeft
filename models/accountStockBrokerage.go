@@ -12,6 +12,9 @@ type AccountsStockBrokerage []*AccountStockBrokerage
 
 // NewAccountStockBrokerage constructor (accout name, amount, expected stock interest rate, sale fee, person holding account)
 func NewAccountStockBrokerage(name string, amount, interestRate, brokerageFee float64, person *Person) *AccountStockBrokerage {
+	if person == nil {
+		panic("Person for stock brokerage account cannot be nil")
+	}
 	return &AccountStockBrokerage{
 		AccountWithInterest: &AccountWithInterest{
 			BankAccount: &BankAccount{
