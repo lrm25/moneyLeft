@@ -9,33 +9,60 @@ import (
 	"github.com/lrm25/moneyLeft/models"
 )
 
-func runAgeLoop(person *models.Person, year, month int) {
-	totalMonths := 0
+type applicationInfo struct {
+	person             *models.Person
+	year               int
+	month              int
+	totalMonths        int
+	calculateMinNeeded bool
+}
+
+func (a *applicationInfo) runSingleMonth() (bool, bool) {
+	a.month++
+	a.totalMonths++
+	if a.month == 13 {
+		a.month = 1
+		a.year++
+		a.person.ChangeTaxYear()
+	}
+	logger.Get().Debug(fmt.Sprintf("year: %d, month: %d", a.year, a.month))
+	a.person.IncreaseAge(a.year, a.month)
+	if a.person.Broke() {
+		if !a.calculateMinNeeded {
+			logger.Get().Info(fmt.Sprintf("Broke on year %d, month %d", a.year, a.month))
+			logger.Get().Info(fmt.Sprintf("Age:  %d years, %d months", a.person.AgeYears(), a.person.AgeMonths()))
+			logger.Get().Info(fmt.Sprintf("Total time:  %d years, %d months", a.totalMonths/12, a.totalMonths%12))
+		}
+		return true, true
+	}
+	if a.person.LifeExpectancy() <= a.person.AgeYears() {
+		logger.Get().Info("You will die before you go broke")
+		return false, true
+	}
+	return false, false
+}
+
+func runAgeLoop(person *models.Person, year, month int, calculateMinNeeded bool) bool {
+	appInfo := &applicationInfo{
+		person:             person,
+		year:               year,
+		month:              month,
+		calculateMinNeeded: calculateMinNeeded,
+		totalMonths:        0,
+	}
+	broke := false
+	complete := false
 	for {
-		month++
-		totalMonths++
-		if month == 13 {
-			month = 1
-			year++
-			person.ChangeTaxYear()
-		}
-		logger.Get().Debug(fmt.Sprintf("year: %d, month: %d", year, month))
-		person.IncreaseAge(year, month)
-		if person.Broke() {
-			logger.Get().Info(fmt.Sprintf("Broke on year %d, month %d", year, month))
-			logger.Get().Info(fmt.Sprintf("Age:  %d years, %d months", person.AgeYears(), person.AgeMonths()))
-			logger.Get().Info(fmt.Sprintf("Total time:  %d years, %d months", totalMonths/12, totalMonths%12))
-			return
-		}
-		if person.LifeExpectancy() <= person.AgeYears() {
-			logger.Get().Info("You will die before you go broke")
-			return
+		broke, complete = appInfo.runSingleMonth()
+		if complete {
+			break
 		}
 	}
+	return broke
 }
 
 // Run the application, telling the user how long they can last before going broke with current accounts and monthly expenses
-func Run(c *config.YamlConfig) {
+func Run(c *config.YamlConfig, calculateMinNeeded bool) bool {
 
 	person := c.Person()
 
@@ -69,5 +96,5 @@ func Run(c *config.YamlConfig) {
 	if person.Broke() {
 		logger.Get().Info("Broke from credit cards")
 	}
-	runAgeLoop(person, year, month)
+	return runAgeLoop(person, year, month, calculateMinNeeded)
 }
