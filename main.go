@@ -17,17 +17,33 @@ func printCostToConvert(costToConvert, neededPerMonth float64) {
 func main() {
 
 	logger.Init(logger.LevelInfo)
-	c := config.Load("accounts.yaml")
-	if c.LogLevel != nil {
-		logger.Get().SetLevel(*c.LogLevel)
-	}
-
-	// Define a command line flag named "number"
 	costToConvert := flag.Float64("costToConvert", 0.0, "Cost to convert to time")
+	calculateMinNeeded := flag.Bool("calculateMinNeeded", false, "If true, calculated minimum needed to not go broke lifetime")
 	flag.Parse()
-	if 0.01 <= *costToConvert {
-		printCostToConvert(*costToConvert, c.YamlPerson.NeededPerMonth)
-		return
+	monthlyIncome := 0.00
+	broke := true
+	for broke {
+		c := config.Load("accounts.yaml")
+		if *calculateMinNeeded {
+			c.MonthlyIncome = &monthlyIncome
+		}
+		if c.LogLevel != nil {
+			logger.Get().SetLevel(*c.LogLevel)
+		}
+
+		if 0.01 <= *costToConvert {
+			printCostToConvert(*costToConvert, c.YamlPerson.NeededPerMonth)
+			return
+		}
+		broke = application.Run(c, *calculateMinNeeded)
+		if !*calculateMinNeeded {
+			break
+		}
+		if broke {
+			monthlyIncome += 1.00
+		}
 	}
-	application.Run(c)
+	if *calculateMinNeeded {
+		fmt.Printf("income required: %.2f\n", monthlyIncome)
+	}
 }
