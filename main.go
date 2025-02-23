@@ -14,12 +14,26 @@ func printCostToConvert(costToConvert, neededPerMonth float64) {
 	logger.Get().Info(fmt.Sprintf("Cost in months: %.02f, approx days: %.02f", months, months*30))
 }
 
+var costToConvert *float64
+var calculateMinNeeded *bool
+var calculatePerHour *bool
+
+func setupFlags() {
+	costToConvert = flag.Float64("costToConvert", 0.0, "Cost to convert to time")
+	calculateMinNeeded = flag.Bool("calculateMinNeeded", false, "If true, calculated minimum needed to not go broke lifetime")
+	calculatePerHour = flag.Bool("calculatePerHour", false, "If true, calculate amount needed per hour")
+	flag.Parse()
+
+	if !*calculateMinNeeded && *calculatePerHour {
+		logger.Get().Crit("'calculatePerHour' flag requires 'calculateMinNeeded' flag")
+	}
+}
+
 func main() {
 
 	logger.Init(logger.LevelInfo)
-	costToConvert := flag.Float64("costToConvert", 0.0, "Cost to convert to time")
-	calculateMinNeeded := flag.Bool("calculateMinNeeded", false, "If true, calculated minimum needed to not go broke lifetime")
-	flag.Parse()
+	setupFlags()
+
 	monthlyIncome := 0.00
 	broke := true
 	for broke {
@@ -45,5 +59,9 @@ func main() {
 	}
 	if *calculateMinNeeded {
 		fmt.Printf("income required: %.2f\n", monthlyIncome)
+		if *calculatePerHour {
+			perHour := monthlyIncome * 12 / (52 * 40)
+			fmt.Printf("per hour (52 weeks, 40 hours): %.2f\n", perHour)
+		}
 	}
 }
