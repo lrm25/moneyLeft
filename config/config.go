@@ -11,16 +11,16 @@ import (
 
 // Constants representing social security payout declaration in yaml file
 const (
-	SSPayoutEarly = "early"
+	SSPayoutEarly  = "early"
 	SSPayoutNormal = "normal"
-	SSPayoutLate = "late"
+	SSPayoutLate   = "late"
 )
 
 // YamlPerson - person in yaml file
 type YamlPerson struct {
-	Years          int `yaml:"years"`
-	Months         int `yaml:"months"`
-	LifeExpectancy int `yaml:"lifeExpectancy"`
+	Years          int     `yaml:"years"`
+	Months         int     `yaml:"months"`
+	LifeExpectancy int     `yaml:"lifeExpectancy"`
 	NeededPerMonth float64 `yaml:"neededPerMonth"`
 }
 
@@ -59,10 +59,22 @@ type IRA struct {
 
 // SocialSecurity account in yaml file
 type SocialSecurity struct {
-	Early     float64 `yaml:"early"`
-	Normal    float64 `yaml:"normal"`
-	Late      float64 `yaml:"late"`
-	Selection string  `yaml:"selection"`
+	Early             float64 `yaml:"early"`
+	Normal            float64 `yaml:"normal"`
+	Late              float64 `yaml:"late"`
+	Selection         string  `yaml:"selection"`
+	YearlyDropPercent int     `yaml:"yearlyDropPercent"`
+}
+
+type RealEstate struct {
+	Name                 string  `yaml:"name"`
+	Amount               float64 `yaml:"amount"`
+	AppreciationPerYear  float64 `yaml:"appreciationPerYear"`
+	PercentSalesExpenses int     `yaml:"percentSalesExpenses"`
+	PercentCash          int     `yaml:"percentCash"`
+	PercentStock         int     `yaml:"percentStock"`
+	PercentBonds         int     `yaml:"percentBonds"`
+	StockSaleFee         float64 `yaml:"stockSaleFee"`
 }
 
 // TaxBracket in yaml file
@@ -83,31 +95,35 @@ type BracketCollection struct {
 	FederalBrackets      FederalBrackets `yaml:"federal"`
 	StateBrackets        []TaxBracket    `yaml:"state"`
 	CapitalGainsBrackets []TaxBracket    `yaml:"capitalGains"`
+	AdjustedForInflation bool            `yaml:"adjustedForInflation"`
 }
 
 // YamlConfig - struct holding yaml file data, and data converted to model data for this application
 type YamlConfig struct {
-	YamlPerson         	   YamlPerson         `yaml:"person"`
-	StockReturn            float64            `yaml:"stockReturn"`
-	BondReturn         	   float64            `yaml:"bondReturn"`
-	InflationRate      	   float64            `yaml:"inflationRate"`
-	YamlCreditCards        []CreditCard       `yaml:"creditCards"`
-	YamlInterestAccounts   []InterestAccount  `yaml:"interestAccounts"`
+	YamlPerson             YamlPerson          `yaml:"person"`
+	StockReturn            float64             `yaml:"stockReturn"`
+	BondReturn             float64             `yaml:"bondReturn"`
+	InflationRate          float64             `yaml:"inflationRate"`
+	RealEstateReturn       float64             `yaml:"realEstateReturn"`
+	YamlCreditCards        []CreditCard        `yaml:"creditCards"`
+	YamlInterestAccounts   []InterestAccount   `yaml:"interestAccounts"`
 	YamlNoInterestAccounts []NoInterestAccount `yaml:"noInterestAccounts"`
 	YamlBrokerageAccounts  []BrokerageAccount  `yaml:"brokerage"`
 	YamlIRAs               []IRA               `yaml:"ira"`
-	YamlSocialSecurity     SocialSecurity     `yaml:"socialSecurity"`
-	YamlBracketCollection  BracketCollection  `yaml:"taxBrackets"`
-	LogLevel 			   *string 			  `yaml:"logLevel"`
-	MonthlyIncome 		   *float64 	      `yaml:"monthlyIncome"`
-	person 				   *models.Person
-	creditCards 		   models.CreditCards
-	interestAccounts 	   models.AccountsWithInterest
+	YamlRealEstate         []RealEstate        `yaml:"realEstate"`
+	YamlSocialSecurity     SocialSecurity      `yaml:"socialSecurity"`
+	YamlBracketCollection  BracketCollection   `yaml:"taxBrackets"`
+	LogLevel               *string             `yaml:"logLevel"`
+	MonthlyIncome          *float64            `yaml:"monthlyIncome"`
+	person                 *models.Person
+	creditCards            models.CreditCards
+	interestAccounts       models.AccountsWithInterest
 	noInterestAccounts     models.AccountsNoInterest
-	brokerageAccounts 	   models.AccountsStockBrokerage
-	iras 				   models.IRAs
-	socialSecurity 		   *models.AccountSocialSecurity
-	bracketCollection 	   *models.TaxBracketCollection
+	brokerageAccounts      models.AccountsStockBrokerage
+	iras                   models.IRAs
+	socialSecurity         *models.AccountSocialSecurity
+	bracketCollection      *models.TaxBracketCollection
+	realEstateInvestments  models.RealEstateInvestments
 }
 
 // Load loads the config file into the yaml structure
@@ -182,6 +198,30 @@ func (y *YamlConfig) BrokerageAccounts() models.AccountsStockBrokerage {
 	return y.brokerageAccounts
 }
 
+// RealEstateInvestments represents owned real estate
+func (y *YamlConfig) RealEstateInvestments() models.RealEstateInvestments {
+	if y.realEstateInvestments == nil {
+		y.realEstateInvestments = models.RealEstateInvestments{}
+		for _, rei := range y.YamlRealEstate {
+			realEstate := models.NewRealEstate(&models.RealEstateConfig{
+				Name:                rei.Name,
+				Amount:              rei.Amount,
+				AppreciationPerYear: rei.AppreciationPerYear,
+				PercentSaleCosts:    rei.PercentSalesExpenses,
+				PercentCash:         rei.PercentCash,
+				PercentStock:        rei.PercentStock,
+				PercentBonds:        rei.PercentBonds,
+				StockSaleFee:        rei.StockSaleFee,
+				StockReturn:         y.StockReturn,
+				BondReturn:          y.BondReturn,
+				Person:              y.Person(),
+			})
+			y.realEstateInvestments = append(y.realEstateInvestments, realEstate)
+		}
+	}
+	return y.realEstateInvestments
+}
+
 // IRAs retrieves IRA account data from the yaml file
 func (y *YamlConfig) IRAs() models.IRAs {
 	if y.iras == nil {
@@ -199,11 +239,11 @@ func (y *YamlConfig) SocialSecurity() *models.AccountSocialSecurity {
 	if y.socialSecurity == nil {
 		switch y.YamlSocialSecurity.Selection {
 		case SSPayoutEarly:
-			y.socialSecurity = models.NewAccountSocialSecurity(models.Early, y.YamlSocialSecurity.Early, y.InflationRate, y.Person())
+			y.socialSecurity = models.NewAccountSocialSecurity(models.Early, y.YamlSocialSecurity.Early, y.InflationRate, y.Person(), y.YamlSocialSecurity.YearlyDropPercent)
 		case SSPayoutNormal:
-			y.socialSecurity = models.NewAccountSocialSecurity(models.Normal, y.YamlSocialSecurity.Normal, y.InflationRate, y.Person())
+			y.socialSecurity = models.NewAccountSocialSecurity(models.Normal, y.YamlSocialSecurity.Normal, y.InflationRate, y.Person(), y.YamlSocialSecurity.YearlyDropPercent)
 		case SSPayoutLate:
-			y.socialSecurity = models.NewAccountSocialSecurity(models.Late, y.YamlSocialSecurity.Late, y.InflationRate, y.Person())
+			y.socialSecurity = models.NewAccountSocialSecurity(models.Late, y.YamlSocialSecurity.Late, y.InflationRate, y.Person(), y.YamlSocialSecurity.YearlyDropPercent)
 		default:
 			panic(fmt.Sprintf("Invalid social security payout time: %s", y.YamlSocialSecurity.Selection))
 		}

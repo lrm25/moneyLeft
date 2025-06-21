@@ -11,24 +11,26 @@ type SocialSecuritySelection int
 
 // Selection ages
 const (
-	Early SocialSecuritySelection  = 62
+	Early  SocialSecuritySelection = 62
 	Normal SocialSecuritySelection = 67
-	Late SocialSecuritySelection   = 70
+	Late   SocialSecuritySelection = 70
 )
 
 // AccountSocialSecurity - struct
 type AccountSocialSecurity struct {
 	*AccountWithInterest
-	selection SocialSecuritySelection
-	perMonth  float64
-	person    *Person
+	selection         SocialSecuritySelection
+	perMonth          float64
+	person            *Person
+	yearlyDropPercent int
 }
 
 // NewAccountSocialSecurity constructor (selection - early, normal, or late, monthly payout for selection as of now, expected inflation rate, person with account)
-func NewAccountSocialSecurity(selection SocialSecuritySelection, payout float64, interestRate float64, person *Person) *AccountSocialSecurity {
+func NewAccountSocialSecurity(selection SocialSecuritySelection, payout float64, interestRate float64, person *Person, yearlyDropPercent int) *AccountSocialSecurity {
 	return &AccountSocialSecurity{
-		selection: selection,
-		perMonth:  payout,
+		selection:         selection,
+		perMonth:          payout,
+		yearlyDropPercent: yearlyDropPercent,
 		AccountWithInterest: &AccountWithInterest{
 			BankAccount: &BankAccount{
 				name:        "Social Security",
@@ -66,12 +68,18 @@ func (s *AccountSocialSecurity) Closed() bool {
 // Increase the amount in the account.  Before the user is old enough to receive, just adjust future per-month payment based on inflation.
 // If the user is old enough, add amount to account each month.
 func (s *AccountSocialSecurity) Increase() {
-	s.perMonth *= (1 + (s.interestRate / 1200.00))
+	s.perMonth *= 1 + (s.interestRate / 1200.00)
+	logger.Get().Debug(fmt.Sprintf("increasing social security monthly amount to %.2f\n", s.perMonth))
 	// don't increase on first month available
 	if !s.Closed() && (int(s.selection) < s.person.years || 0 < s.person.months) {
 		s.amount += s.perMonth
 		logger.Get().Debug(fmt.Sprintf("increasing social security to %.2f\n", s.amount))
 		return
+	}
+	// reduce (assumption is that you're not getting paid)
+	if s.Closed() {
+		s.perMonth *= 1 - (float64(s.yearlyDropPercent) / 1200.00)
+		logger.Get().Debug(fmt.Sprintf("decreasing future social security to %.2f\n", s.perMonth))
 	}
 	s.amount = s.perMonth
 }

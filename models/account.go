@@ -14,6 +14,7 @@ const (
 	TypeStockBrokerage
 	TypeIRA
 	TypeSocialSecurity
+	TypeRealEstate = 7
 )
 
 // Account represents any bank account with positive or negative amount
@@ -80,14 +81,17 @@ func (a *BankAccount) Close() {
 	a.closed = true
 }
 
-// Deduct from the account.  If amount is below zero, close.  Return remaining amount in account.
-func (a *BankAccount) Deduct(amount float64) float64 {
-	logger.Get().Debug(fmt.Sprintf("deducting: %.2f\n", amount))
+// Deduct from the account.  If amount is below zero, close.  Return remaining amount in account and outstanding from payment amount
+func (a *BankAccount) Deduct(amount float64) (remaining float64, outstanding float64) {
+	logger.Get().Debug(fmt.Sprintf("deducting from account %s: %.2f\n", a.name, amount))
 	a.amount -= amount
+	outstanding = 0.0
 	if a.amount <= 0 {
+		outstanding = a.amount * -1
 		a.closed = true
+		a.amount = 0
 	}
-	return a.amount
+	return a.amount, outstanding
 }
 
 // Removable specifies whether or not an account can be removed from the user's account list if the amount reaches zero.

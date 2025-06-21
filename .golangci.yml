@@ -1,9 +1,10 @@
-# enable revive linter
+version: "2"
+
 linters:
   enable:
+    - errcheck
+    - staticcheck
+    - govet
+    - ineffassign
+  disable:
     - revive
-issues:
-  include:
-    - EXC0012
-    - EXC0013
-    - EXC0014

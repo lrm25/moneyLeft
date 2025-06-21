@@ -51,14 +51,13 @@ func (c *CreditCardAccountImpl) Close() {
 // Pay the credit card.  This program assumes the user pays the credit cards off each month and does not take credit card interest
 // into account.
 func (c *CreditCardAccountImpl) Pay(account PositiveAccount) bool {
-	accountAmount := account.Amount()
-	if c.amount <= accountAmount {
-		account.Deduct(c.amount)
+	logger.Get().Debug(fmt.Sprintf("Credit card amount for %s before payment: %.2f", c.name, c.amount))
+	logger.Get().Debug(fmt.Sprintf("Paying from %s with total amount: %.2f", account.Name(), account.Amount()))
+	//accountAmount := account.Amount()
+	_, c.amount = account.Deduct(c.amount)
+	if c.amount < 0.001 {
 		c.Close()
-	} else {
-		account.Close()
-		c.amount -= accountAmount
 	}
-	logger.Get().Debug(fmt.Sprintf("Credit card amount for %s: %.2f", c.name, c.amount))
+	logger.Get().Debug(fmt.Sprintf("Credit card amount for %s after payment: %.2f", c.name, c.amount))
 	return c.closed
 }

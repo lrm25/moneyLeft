@@ -1,5 +1,10 @@
 package models
 
+import (
+	"fmt"
+	"github.com/lrm25/moneyLeft/logger"
+)
+
 // TaxBracket is a struct representing a US tax bracket
 type TaxBracket struct {
 	minimum    float64
@@ -57,9 +62,11 @@ func (b *brackets) Brackets() []*TaxBracket {
 // Inflate adjusts brackets based on expected inflation rate
 func (b *brackets) Inflate(inflationRate float64) {
 	for _, bracket := range *b {
-		bracket.minimum *= (1 + inflationRate/100)
+		bracket.minimum *= 1 + inflationRate/100
+		logger.Get().Debug(fmt.Sprintf("Tax bracket minimum raised to %.2f", bracket.minimum))
 		if bracket.hasMaximum {
-			bracket.maximum *= (1 + inflationRate/100)
+			bracket.maximum *= 1 + inflationRate/100
+			logger.Get().Debug(fmt.Sprintf("Tax bracket maximum raised to %.2f", bracket.maximum))
 		}
 	}
 }

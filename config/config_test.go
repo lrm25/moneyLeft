@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -10,7 +11,7 @@ import (
 
 func Test_Config(t *testing.T) {
 	testBytes := []byte(
-`person:
+		`person:
   years: 50
   months: 5
   lifeExpectancy: 70
@@ -67,8 +68,12 @@ taxBrackets:
 	testConfig, err := os.Create(configFileName)
 	require.NoError(t, err)
 	defer func() {
-		testConfig.Close()
-		os.Remove(configFileName)
+		if closeErr := testConfig.Close(); closeErr != nil {
+			fmt.Println("error closing temp config file", err)
+		}
+		if removeErr := os.Remove(configFileName); removeErr != nil {
+			fmt.Printf("error removing file %s: %v\n", configFileName, removeErr)
+		}
 	}()
 
 	_, err = testConfig.Write(testBytes)
@@ -95,7 +100,7 @@ taxBrackets:
 	require.Equal(t, 1, len(interestAccounts))
 	require.InDelta(t, 10000.00, interestAccounts[0].Amount(), 0.01)
 	require.InDelta(t, 2.25, interestAccounts[0].Rate(), 0.01)
-	
+
 	noInterestAccounts := c.NoInterestAccounts()
 	require.Equal(t, 1, len(noInterestAccounts))
 	require.InDelta(t, 5000.00, noInterestAccounts[0].Amount(), 0.01)
@@ -116,7 +121,7 @@ taxBrackets:
 	require.InDelta(t, c.StockReturn, iraAccounts[0].StockInterestRate(), 0.01)
 	require.InDelta(t, c.BondReturn, iraAccounts[0].BondInterestRate(), 0.01)
 	require.Equal(t, 50, iraAccounts[0].Person().AgeYears())
-	
+
 	socialSecurity := c.SocialSecurity()
 	// not 67 yet
 	require.InDelta(t, 0.0, socialSecurity.Amount(), 0.01)

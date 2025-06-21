@@ -122,31 +122,38 @@ func (p *Person) PayCreditCards() {
 	p.creditCards = nil
 }
 
-// pay the user's monthly expenses
+// pay the user's monthly or tax expenses, return true if not broke
 func (p *Person) pay(remaining float64) bool {
+	if -0.005 < remaining && remaining < 0.005 {
+		return true
+	}
+
+	var remainingToPay float64
 	for _, account := range p.accounts {
 		if !account.Closed() {
 			logger.Get().Debug(fmt.Sprintf("Paying from account %s", account.Name()))
-			remaining = account.Deduct(remaining)
-			logger.Get().Debug(fmt.Sprintf("non interest remaining: %.2f", remaining))
+			remaining, remainingToPay = account.Deduct(remaining)
+			logger.Get().Debug(fmt.Sprintf("remaining to pay: %.2f", remaining))
 			if 0 < remaining {
 				return true
 			}
 			remaining *= -1
 		}
+		remaining += remainingToPay
 	}
 
 	for _, account := range p.interestAccounts {
 		if !account.Closed() {
 			logger.Get().Debug(fmt.Sprintf("Paying from account %s", account.Name()))
-			logger.Get().Debug(fmt.Sprintf("remaining: %.2f", remaining))
-			remaining = account.Deduct(remaining)
-			logger.Get().Debug(fmt.Sprintf("after deduction: %.2f", remaining))
+			logger.Get().Debug(fmt.Sprintf("remaining to pay: %.2f", remaining))
+			remaining, remainingToPay = account.Deduct(remaining)
+			logger.Get().Debug(fmt.Sprintf("remaining in account after deduction: %.2f", remaining))
 			if 0 < remaining {
 				return true
 			}
 			remaining *= -1
 		}
+		remaining += remainingToPay
 	}
 	return false
 }
@@ -173,12 +180,11 @@ func (p *Person) PayTaxes() bool {
 		logger.Get().Debug(fmt.Sprintf("cap amount: %.2f", p.capBrackets.GetTaxAmount(p.taxableOtherLast, p.taxableCapGainsLast)))
 	}
 	if p.stateBrackets != nil {
-		amount += p.stateBrackets.GetTaxAmount(p.taxableOtherLast+p.taxableCapGainsLast)
+		amount += p.stateBrackets.GetTaxAmount(p.taxableOtherLast + p.taxableCapGainsLast)
 		logger.Get().Debug(fmt.Sprintf("state amount: %.2f", p.stateBrackets.GetTaxAmount(p.taxableOtherLast+p.taxableCapGainsLast)))
 	}
 
-	logger.Get().Debug(fmt.Sprintf("amount: %.2f", amount))
-	// reset afterwards
+	logger.Get().Debug(fmt.Sprintf("total tax amount: %.2f", amount))
 	p.taxableCapGainsLast = 0
 	p.taxableOtherLast = 0
 	return p.pay(amount)
@@ -187,7 +193,7 @@ func (p *Person) PayTaxes() bool {
 // IncreaseAge increases the person's age by one month and does corresponding calculations:  deducting
 // expected monthly amount, closing empty accounts with the exception of social security, paying taxes
 // once a year, and terminating if the user is broke.  The program also allows the user to add a monthly
-// income if they make less than what they need and want to see how much longer they can last if they 
+// income if they make less than what they need and want to see how much longer they can last if they
 // continue to make that income.
 func (p *Person) IncreaseAge(year, month int) {
 	p.months++
@@ -215,7 +221,7 @@ func (p *Person) IncreaseAge(year, month int) {
 		p.broke = true
 		return
 	}
-	for idx:= 0; idx < len(p.accounts); {
+	for idx := 0; idx < len(p.accounts); {
 		if p.accounts[idx].Closed() && p.accounts[idx].Removable() {
 			logger.Get().Debug(fmt.Sprintf("Removing account %s", p.accounts[idx].Name()))
 			if idx < len(p.accounts)-1 {
@@ -256,14 +262,25 @@ func (p *Person) String(year, month int) string {
 	s := fmt.Sprintf("STATUS - year %d month %d\n", year, month)
 	s += fmt.Sprintf("Age: %d years %d months\n", p.years, p.months)
 	s += fmt.Sprintf("Needed per month: %.2f", p.neededPerMonth)
+	totalAmount := 0.00
 	for _, cc := range p.creditCards {
 		s += fmt.Sprintf("\n%s %.2f", cc.name, cc.amount)
+		if !cc.Closed() {
+			totalAmount += cc.Amount()
+		}
 	}
 	for _, account := range p.accounts {
 		s += fmt.Sprintf("\n%s", account.String())
+		if !account.Closed() {
+			totalAmount += account.Amount()
+		}
 	}
 	for _, pa := range p.interestAccounts {
 		s += fmt.Sprintf("\n%s", pa.String())
+		if !pa.Closed() {
+			totalAmount += pa.Amount()
+		}
 	}
+	s += fmt.Sprintf("\nTotal amount: %.2f", totalAmount)
 	return s
 }

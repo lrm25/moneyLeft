@@ -11,7 +11,7 @@ func Test_RemovableAccounts(t *testing.T) {
 	var accounts Accounts
 
 	nonSSAccount := NewBankAccount("test non ss account", TypeSavingsNoInterest, 0.00)
-	ssAccount := NewAccountSocialSecurity(Early, 0.00, 0.00, NewPerson(50, 0, 80, 1000.00, 0.0))
+	ssAccount := NewAccountSocialSecurity(Early, 0.00, 0.00, NewPerson(50, 0, 80, 1000.00, 0.0), 0)
 	accounts = append(accounts, nonSSAccount, ssAccount)
 	for idx, account := range accounts {
 		if account.Removable() {
@@ -36,7 +36,8 @@ func Test_Closed(t *testing.T) {
 	require.Equal(t, true, creditCard.Closed(), "Credit card account should be closed")
 	require.InDelta(t, 500.00, testAccount.Amount(), 0.01, "500.00 should be remaining in account")
 
-	remainder := bankAccount.Deduct(4000.00)
+	amount, remainder := bankAccount.Deduct(4000.00)
 	require.Equal(t, true, bankAccount.Closed(), "Bank account should be closed")
-	require.InDelta(t, -1500.00, remainder, 0.01, "Remainder should be -1500.00")
+	require.InDelta(t, 0.00, amount, 0.01, "Remaining in account should be 0.00")
+	require.InDelta(t, 1500.00, remainder, 0.01, "Remaining to pay should be 1500.00")
 }
