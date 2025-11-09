@@ -82,6 +82,9 @@ func Run(c *config.YamlConfig, calculateMinNeeded bool) bool {
 	for _, a := range c.IRAs() {
 		pias = append(pias, a)
 	}
+	for _, a := range c.RealEstateInvestments() {
+		pias = append(pias, a)
+	}
 	pias = append(pias, c.SocialSecurity())
 
 	person.WithAccounts(c.CreditCards(), pas, pias)

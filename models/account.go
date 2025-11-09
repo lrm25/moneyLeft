@@ -14,6 +14,7 @@ const (
 	TypeStockBrokerage
 	TypeIRA
 	TypeSocialSecurity
+	TypeRealEstate = 7
 )
 
 // Account represents any bank account with positive or negative amount
