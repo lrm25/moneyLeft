@@ -14,15 +14,17 @@ func NewCashAccount(name string, typ int, amount float64) *CashAccount {
 
 // Deduct removes a certain amount of cash from the account, and closes it if the amount is below 0.
 // The remainder is returned, which is 0 or negative if the account is closed.
-func (a *CashAccount) Deduct(amount float64) float64 {
+func (a *CashAccount) Deduct(amount float64) (float64, float64) {
 	result := a.amount - amount
 	if result <= 0 {
 		a.amount = 0.0
+		result *= -1
 		if a.accountType != TypeSocialSecurity {
 			a.closed = true
 		}
 	} else {
 		a.amount = result
+		result = 0
 	}
-	return result
+	return a.amount, result
 }

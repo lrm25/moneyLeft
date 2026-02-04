@@ -59,7 +59,7 @@ var logger *Logger
 
 // Logger struct, with log level
 type Logger struct {
-	level int
+	level  int
 	stream io.Writer
 }
 
@@ -67,7 +67,7 @@ type Logger struct {
 func Init(level int) *Logger {
 	if logger == nil {
 		logger = &Logger{
-			level: level,
+			level:  level,
 			stream: os.Stdout,
 		}
 	}
@@ -78,7 +78,7 @@ func Init(level int) *Logger {
 func InitWithWriter(level int, stream io.Writer) *Logger {
 	if logger == nil {
 		logger = &Logger{
-			level: level,
+			level:  level,
 			stream: stream,
 		}
 	}
@@ -103,7 +103,9 @@ func (l *Logger) Log(level int, message string) {
 	if level <= l.level {
 		datetime := time.Now().Format("2006-01-02 15:04:05 -0700")
 		_, file, line, _ := runtime.Caller(2)
-		fmt.Fprintf(l.stream, "%s %s [%s:%d] %s\n", datetime, getLevelString(level), file, line, message)
+		if _, err := fmt.Fprintf(l.stream, "%s %s [%s:%d] %s\n", datetime, getLevelString(level), file, line, message); err != nil {
+			fmt.Println("Error logging to file", err)
+		}
 	}
 }
 

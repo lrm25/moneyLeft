@@ -1,5 +1,10 @@
 package models
 
+import (
+	"fmt"
+	"github.com/lrm25/moneyLeft/logger"
+)
+
 // IRA - structure representing IRA
 type IRA struct {
 	*BankAccount
@@ -53,21 +58,28 @@ func (i *IRA) Person() *Person {
 func (i *IRA) Increase() {
 	totalStock := i.amount * (i.percentStock / 100.0)
 	totalBond := i.amount - totalStock
-	totalStock *= (1 + (i.stockInterestRate / 1200.0))
-	totalBond *= (1 + (i.bondInterestRate / 1200.0))
+	totalStock *= 1 + (i.stockInterestRate / 1200.0)
+	totalBond *= 1 + (i.bondInterestRate / 1200.0)
 	i.amount = totalStock + totalBond
+	logger.Get().Debug(fmt.Sprintf("Increasing %s amount to %.2f", i.name, i.amount))
 }
 
 // Deduct from the account.  Take into account taxable income, and if the holder is less than 59.5 years old,
 // deduct a 10% penalty as well
-func (i *IRA) Deduct(amount float64) float64 {
+func (i *IRA) Deduct(amount float64) (float64, float64) {
 	i.amount -= amount
+	logger.Get().Debug(fmt.Sprintf("Deducting %.2f from %s", amount, i.name))
 	i.person.taxableOtherThis += amount
 	if i.person.years < 60 && i.person.months < 6 {
-		i.amount -= amount * 0.1
+		penalty := amount * 0.1
+		i.amount -= penalty
+		logger.Get().Debug(fmt.Sprintf("Deducting %.2f penalty from %s", penalty, i.name))
 	}
+	outstanding := 0.0
 	if i.amount < 0 {
 		i.closed = true
+		outstanding = -1 * i.amount
+		i.amount = 0
 	}
-	return i.amount
+	return i.amount, outstanding
 }

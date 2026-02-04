@@ -57,7 +57,7 @@ func Test_PayCreditCardsNothing(t *testing.T) {
 func Test_SocialSecurity(t *testing.T) {
 
 	p := NewPerson(61, 0, 70, 0.0, 0.0)
-	ssAccount := NewAccountSocialSecurity(Early, 1000.00, 10.0, p)
+	ssAccount := NewAccountSocialSecurity(Early, 1000.00, 10.0, p, 0)
 	accounts := PassiveIncreaseAccounts{}
 	accounts = append(accounts, ssAccount)
 	p.WithAccounts(nil, nil, accounts)
@@ -72,7 +72,7 @@ func Test_SocialSecurity(t *testing.T) {
 	require.InDelta(t, ssAccount.Amount(), 3340.00, 20.00)
 
 	p = NewPerson(65, 0, 70, 0.0, 0.0)
-	ssAccount = NewAccountSocialSecurity(Normal, 2000.00, 10.0, p)
+	ssAccount = NewAccountSocialSecurity(Normal, 2000.00, 10.0, p, 0)
 	accounts = PassiveIncreaseAccounts{}
 	accounts = append(accounts, ssAccount)
 	p.WithAccounts(nil, nil, accounts)
@@ -107,9 +107,9 @@ func Test_PayTaxes(t *testing.T) {
 	// total tax of (5000 - 4000) * 0.1 = 100
 	nonCapBrackets := NewFedTaxBrackets(4000.00, []*TaxBracket{NewTaxBracket(0.0, 4000.00, 10.0)})
 	// total tax of 5000 * 0.2 = 1000
-	capBrackets := NewCapTaxBrackets([]*TaxBracket{NewTaxBracket(0.0, 20000.0, 20.0)}) 
+	capBrackets := NewCapTaxBrackets([]*TaxBracket{NewTaxBracket(0.0, 20000.0, 20.0)})
 	person.WithAccounts(nil, PositiveAccounts{bankAccount}, PassiveIncreaseAccounts{investmentAccount})
 	person.WithTaxBrackets(nonCapBrackets, capBrackets, nil)
 	person.PayTaxes()
-	assert.InDelta(t, 9900.00, investmentAccount.Amount() + bankAccount.Amount(), 1.00)
+	assert.InDelta(t, 9900.00, investmentAccount.Amount()+bankAccount.Amount(), 1.00)
 }

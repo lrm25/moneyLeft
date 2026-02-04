@@ -32,7 +32,7 @@ func NewAccountStockBrokerage(name string, amount, interestRate, brokerageFee fl
 
 // Increase the amount for a single month with the yearly interest rate
 func (a *AccountStockBrokerage) Increase() {
-	a.amount *= (1 + (a.interestRate / 1200.0))
+	a.amount *= 1 + (a.interestRate / 1200.0)
 }
 
 // Person returns the person owning this account
@@ -47,12 +47,15 @@ func (a *AccountStockBrokerage) MonthlySaleFee() float64 {
 
 // Deduct removes money from the brokerage account when the user retrieves it, taking into account that
 // the money is now cap gains taxable and requires a sale fee
-func (a *AccountStockBrokerage) Deduct(amount float64) float64 {
+func (a *AccountStockBrokerage) Deduct(amount float64) (float64, float64) {
 	a.amount -= amount
 	a.amount -= a.brokerageFeePerMonth
 	a.person.taxableCapGainsThis += amount
+	outstanding := 0.0
 	if a.amount <= 0 {
+		outstanding = a.amount * -1
 		a.closed = true
+		a.amount = 0
 	}
-	return a.amount
+	return a.amount, outstanding
 }
