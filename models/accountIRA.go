@@ -70,13 +70,13 @@ func (i *IRA) Deduct(amount float64) (float64, float64) {
 	i.amount -= amount
 	logger.Get().Debug(fmt.Sprintf("Deducting %.2f from %s", amount, i.name))
 	i.person.taxableOtherThis += amount
-	if i.person.years < 60 && i.person.months < 6 {
+	if i.person.years < 59 || (i.person.years == 59 && i.person.months < 6) {
 		penalty := amount * 0.1
 		i.amount -= penalty
 		logger.Get().Debug(fmt.Sprintf("Deducting %.2f penalty from %s", penalty, i.name))
 	}
 	outstanding := 0.0
-	if i.amount < 0 {
+	if i.amount <= 0 {
 		i.closed = true
 		outstanding = -1 * i.amount
 		i.amount = 0
