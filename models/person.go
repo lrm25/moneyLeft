@@ -123,37 +123,36 @@ func (p *Person) PayCreditCards() {
 }
 
 // pay the user's monthly or tax expenses, return true if not broke
-func (p *Person) pay(remaining float64) bool {
-	if -0.005 < remaining && remaining < 0.005 {
+func (p *Person) pay(outstanding float64) bool {
+	if -0.005 < outstanding && outstanding < 0.005 {
 		return true
 	}
 
-	var remainingToPay float64
+	var remainingInAccount float64
 	for _, account := range p.accounts {
 		if !account.Closed() {
 			logger.Get().Debug(fmt.Sprintf("Paying from account %s", account.Name()))
-			remaining, remainingToPay = account.Deduct(remaining)
-			logger.Get().Debug(fmt.Sprintf("remaining to pay: %.2f", remaining))
-			if 0 < remaining {
+			remainingInAccount, outstanding = account.Deduct(outstanding)
+			logger.Get().Debug(fmt.Sprintf("remaining to pay: %.2f", outstanding))
+			if 0 < remainingInAccount {
 				return true
 			}
-			remaining *= -1
 		}
-		remaining += remainingToPay
+		//remaining += remainingToPay
 	}
 
 	for _, account := range p.interestAccounts {
 		if !account.Closed() {
 			logger.Get().Debug(fmt.Sprintf("Paying from account %s", account.Name()))
-			logger.Get().Debug(fmt.Sprintf("remaining to pay: %.2f", remaining))
-			remaining, remainingToPay = account.Deduct(remaining)
-			logger.Get().Debug(fmt.Sprintf("remaining in account after deduction: %.2f", remaining))
-			if 0 < remaining {
+			logger.Get().Debug(fmt.Sprintf("remaining to pay: %.2f", outstanding))
+			remainingInAccount, outstanding = account.Deduct(outstanding)
+			logger.Get().Debug(fmt.Sprintf("remaining in account after deduction: %.2f", outstanding))
+			if 0 < remainingInAccount {
 				return true
 			}
-			remaining *= -1
+			//remaining *= -1
 		}
-		remaining += remainingToPay
+		//remaining += remainingToPay
 	}
 	return false
 }

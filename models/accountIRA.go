@@ -80,6 +80,7 @@ func (i *IRA) Deduct(amount float64) (float64, float64) {
 		i.closed = true
 		outstanding = -1 * i.amount
 		i.amount = 0
+		logger.Get().Debug(fmt.Sprintf("account %s closed, %.2f outstanding", i.name, outstanding))
 	}
 	return i.amount, outstanding
 }
