@@ -17,11 +17,13 @@ func printCostToConvert(costToConvert, neededPerMonth float64) {
 var costToConvert *float64
 var calculateMinNeeded *bool
 var calculatePerHour *bool
+var retirementAge *int
 
 func setupFlags() {
 	costToConvert = flag.Float64("costToConvert", 0.0, "Cost to convert to time")
 	calculateMinNeeded = flag.Bool("calculateMinNeeded", false, "If true, calculated minimum needed to not go broke lifetime")
 	calculatePerHour = flag.Bool("calculatePerHour", false, "If true, calculate amount needed per hour")
+	retirementAge = flag.Int("retirementAge", 0, "Desired retirement age")
 	flag.Parse()
 
 	if !*calculateMinNeeded && *calculatePerHour {
@@ -49,7 +51,7 @@ func main() {
 			printCostToConvert(*costToConvert, c.YamlPerson.NeededPerMonth)
 			return
 		}
-		broke = application.Run(c, *calculateMinNeeded)
+		broke = application.Run(c, *calculateMinNeeded, *retirementAge)
 		if !*calculateMinNeeded {
 			break
 		}
