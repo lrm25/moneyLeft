@@ -62,7 +62,7 @@ func runAgeLoop(person *models.Person, year, month int, calculateMinNeeded bool)
 }
 
 // Run the application, telling the user how long they can last before going broke with current accounts and monthly expenses
-func Run(c *config.YamlConfig, calculateMinNeeded bool) bool {
+func Run(c *config.YamlConfig, calculateMinNeeded bool, retirementAge int) bool {
 
 	person := c.Person()
 
@@ -93,6 +93,9 @@ func Run(c *config.YamlConfig, calculateMinNeeded bool) bool {
 
 	if c.MonthlyIncome != nil {
 		person.SetIncome(*c.MonthlyIncome)
+	}
+	if retirementAge != 0 {
+		person.SetRetirementAge(retirementAge)
 	}
 
 	person.PayCreditCards()

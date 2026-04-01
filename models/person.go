@@ -26,6 +26,7 @@ type Person struct {
 	capBrackets         *CapTaxBrackets
 	stateBrackets       *StateTaxBrackets
 	income              float64
+	retirementAge       int
 }
 
 // NewPerson construtor (current age in years and months, life expectancy, money needed per month, expected yearly inflation rate)
@@ -38,6 +39,7 @@ func NewPerson(years, months, lifeExpectancy int, neededPerMonth, inflationRate 
 		broke:          false,
 		alive:          true,
 		inflationRate:  inflationRate,
+		retirementAge:  -1,
 	}
 }
 
@@ -85,6 +87,10 @@ func (p *Person) NeededPerMonth() float64 {
 // SetIncome sets a user's monthly income
 func (p *Person) SetIncome(income float64) {
 	p.income = income
+}
+
+func (p *Person) SetRetirementAge(retirementAge int) {
+	p.retirementAge = retirementAge
 }
 
 // PayCreditCards immediately pays off the user's credit cards.  To keep things simple now,
@@ -200,15 +206,15 @@ func (p *Person) IncreaseAge(year, month int) {
 		p.years++
 		p.months = 0
 	}
-	p.neededPerMonth *= (1 + p.inflationRate/1200.00)
+	p.neededPerMonth *= 1 + p.inflationRate/1200.00
 	logger.Get().Debug(fmt.Sprintf("%.2f", p.neededPerMonth))
 
 	neededPerMonth := p.neededPerMonth
 	// for now, keep this simple and don't worry about handling first year YTD taxes
-	if 0 < p.income {
+	if 0 < p.income && (p.retirementAge == -1 || p.years < p.retirementAge) {
 		neededPerMonth -= p.income
 		p.taxableOtherThis += p.income
-		p.income *= (1 + p.inflationRate/1200.00)
+		p.income *= 1 + p.inflationRate/1200.00
 	}
 
 	for _, account := range p.interestAccounts {
