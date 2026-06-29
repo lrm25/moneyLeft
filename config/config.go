@@ -50,6 +50,12 @@ type BrokerageAccount struct {
 	SaleFee float64 `yaml:"monthlySaleFee"`
 }
 
+// BondAccount - bond account in yaml file
+type BondAccount struct {
+	Name   string  `yaml:"name"`
+	Amount float64 `yaml:"amount"`
+}
+
 // IRA in yaml file
 type IRA struct {
 	Name         string  `yaml:"name"`
@@ -109,6 +115,7 @@ type YamlConfig struct {
 	YamlInterestAccounts   []InterestAccount   `yaml:"interestAccounts"`
 	YamlNoInterestAccounts []NoInterestAccount `yaml:"noInterestAccounts"`
 	YamlBrokerageAccounts  []BrokerageAccount  `yaml:"brokerage"`
+	YamlBondAccounts       []BondAccount       `yaml:"bond"`
 	YamlIRAs               []IRA               `yaml:"ira"`
 	YamlRealEstate         []RealEstate        `yaml:"realEstate"`
 	YamlSocialSecurity     SocialSecurity      `yaml:"socialSecurity"`
@@ -120,6 +127,7 @@ type YamlConfig struct {
 	interestAccounts       models.AccountsWithInterest
 	noInterestAccounts     models.AccountsNoInterest
 	brokerageAccounts      models.AccountsStockBrokerage
+	bondAccounts           models.AccountsBond
 	iras                   models.IRAs
 	socialSecurity         *models.AccountSocialSecurity
 	bracketCollection      *models.TaxBracketCollection
@@ -196,6 +204,18 @@ func (y *YamlConfig) BrokerageAccounts() models.AccountsStockBrokerage {
 		}
 	}
 	return y.brokerageAccounts
+}
+
+// BondAccounts retrieves bond account data from the yaml file
+func (y *YamlConfig) BondAccounts() models.AccountsBond {
+	if y.bondAccounts == nil {
+		y.bondAccounts = models.AccountsBond{}
+		for _, ya := range y.YamlBondAccounts {
+			bondAccount := models.NewAccountBond(ya.Name, ya.Amount, y.BondReturn, y.Person())
+			y.bondAccounts = append(y.bondAccounts, bondAccount)
+		}
+	}
+	return y.bondAccounts
 }
 
 // RealEstateInvestments represents owned real estate
